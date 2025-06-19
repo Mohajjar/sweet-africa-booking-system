@@ -4,66 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Booking - Sweet Africa Global LLC</title>
-    
-    <link rel="stylesheet" href="css/global.css">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
-
-    <style>
-        /* Style for the 'My Account' link to make it look like a button */
-        #profile-link {
-            background-color: #f3f4f6; /* light gray */
-            color: #374151;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            text-decoration: none;
-            transition: background-color 0.2s;
-        }
-        #profile-link:hover {
-            background-color: #e5e7eb;
-        }
-
-        /* Style for the 'Log Out' button */
-        #logout-button {
-            background-color: #ef4444; /* red-500 */
-            color: white;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #logout-button:hover {
-            background-color: #dc2626; /* red-600 */
-        }
-    </style>
-</head>
+    <link rel="stylesheet" href="css/global.css">
 </head>
 <body class="bg-gray-100">
 
-    
     <!-- New Professional Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
+    <header class="bg-white shadow-md sticky top-0 z-50">
         <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- Site Name / Logo -->
                 <div class="flex-shrink-0">
-                    <a href="index.html" class="text-xl font-bold text-gray-800">Sweet Africa</a>
+                    <a href="index.html" class="text-xl font-bold text-gray-800 hover:text-blue-500 transition">Sweet Africa</a>
                 </div>
-
-                <!-- Navigation Buttons -->
                 <div class="flex items-center space-x-4">
-                    <a href="profile.html" id="profile-link">My Account</a>
-                    <button id="logout-button">Log Out</button>
+                    <a href="profile.html" class="hidden sm:block text-gray-600 hover:text-blue-500 px-3 py-2 rounded-md text-sm font-medium transition">My Account</a>
+                    <button id="logout-button" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition">Log Out</button>
                 </div>
             </div>
         </nav>
@@ -83,12 +41,12 @@
 
     <!-- Main script for the page -->
     <script type="module">
-    
+    // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-    // web app's Firebase configuration
+    // Your web app's Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
       authDomain: "sweet-africa-bookings.firebaseapp.com",
@@ -98,7 +56,6 @@
       appId: "1:950167391030:web:1085602775ce912d220197"
     };
 
-    // Initialize Firebase and export services
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
@@ -106,10 +63,8 @@
     window.db = db;
     window.firebase = { collection, addDoc };
 
-    // --- USER AUTHENTICATION CHECK ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            console.log("User is logged in:", user.uid);
             const userDocRef = doc(db, "users", user.uid);
             const userDocSnap = await getDoc(userDocRef);
             if (userDocSnap.exists()) {
@@ -119,7 +74,6 @@
             }
             loadApp();
         } else {
-            console.log("No user logged in. Redirecting to login page.");
             window.location.href = 'login.html';
         }
     });
@@ -150,7 +104,7 @@
         }
         return Math.max(total, 0);
     }
-    window.calculatePrice = calculatePrice; // Make it global
+    window.calculatePrice = calculatePrice;
 
     function updateSummary() {
         const summaryCard = document.getElementById("summary-placeholder");
