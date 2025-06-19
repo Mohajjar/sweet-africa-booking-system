@@ -1,17 +1,38 @@
-.datetime-container {
+datetime-container {
     display: flex;
-    gap: 40px;
-    align-items: flex-start;
+    flex-direction: column; /* Stack on mobile */
+    gap: 30px;
+    align-items: center;
+}
+@media (min-width: 992px) { /* Use a larger breakpoint for side-by-side */
+    .datetime-container {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 40px;
+    }
 }
 
 .datepicker-container {
-    flex: 1.5;
+    width: 100%;
+    max-width: 400px; /* Limit calendar width on mobile */
+}
+@media (min-width: 992px) {
+    .datepicker-container {
+        flex: 1.5;
+        max-width: none;
+    }
 }
 
+
 .timepicker-container {
-    flex: 1;
-    max-height: 400px;
-    overflow-y: auto;
+    width: 100%;
+}
+@media (min-width: 992px) {
+    .timepicker-container {
+        flex: 1;
+        max-height: 400px;
+        overflow-y: auto;
+    }
 }
 
 /* Styles for Flatpickr Calendar */
@@ -54,13 +75,4 @@
     background-color: #8b6dff;
     color: white;
     border-color: #8b6dff;
-}
-
-@media (max-width: 768px) {
-    .datetime-container {
-        flex-direction: column;
-    }
-    .timepicker-container {
-        width: 100%;
-    }
 }
