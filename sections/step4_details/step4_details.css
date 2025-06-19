@@ -6,8 +6,17 @@
 
 .form-row {
     display: flex;
+    flex-direction: column; /* On mobile, stack fields vertically */
     gap: 20px;
 }
+
+/* On larger screens, put them side-by-side again */
+@media (min-width: 768px) {
+    .form-row {
+        flex-direction: row;
+    }
+}
+
 
 .form-group {
     flex: 1;
@@ -47,9 +56,17 @@
 
 .payment-options {
     display: flex;
-    gap: 20px;
-    margin-top: 15px;
+    flex-direction: column; /* Stack payment options on mobile */
+    gap: 15px;
 }
+
+@media (min-width: 768px) {
+    .payment-options {
+        flex-direction: row;
+        gap: 20px;
+    }
+}
+
 
 .payment-option {
     display: flex;
