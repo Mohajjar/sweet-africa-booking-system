@@ -1,0 +1,91 @@
+<div id="configure-step-wrapper" class="step-content">
+  <h1>Configure Your Service</h1>
+  <p class="subtitle">Specify the details of the job.</p>
+
+  <div class="form-section">
+    <h3 class="section-title">What Needs To Be Done?</h3>
+    <div class="input-row">
+      <div class="input-group">
+        <label>Bedrooms</label>
+        <div class="quantity-input">
+          <button type="button" class="quantity-minus">-</button>
+          <input type="text" value="1" readonly data-room-input="bedrooms">
+          <button type="button" class="quantity-plus">+</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Bathrooms</label>
+        <div class="quantity-input">
+          <button type="button" class="quantity-minus">-</button>
+          <input type="text" value="1" readonly data-room-input="bathrooms">
+          <button type="button" class="quantity-plus">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3 class="section-title">Select Extras</h3>
+    <div class="extras-grid">
+      <div class="extra-card" data-extra="organization">
+        <i class="fas fa-boxes-stacked"></i>
+        <span>Organization</span>
+      </div>
+      <div class="extra-card" data-extra="laundry">
+        <i class="fas fa-shirt"></i>
+        <span>Laundry</span>
+      </div>
+      <div class="extra-card" data-extra="dishes">
+        <i class="fas fa-plate-wheat"></i>
+        <span>Dishes</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section partial-cleaning-section">
+      <div class="partial-cleaning-toggle">
+          <h3 class="section-title">Partial Cleaning?</h3>
+          <label class="switch">
+              <input type="checkbox" id="partial-cleaning-checkbox">
+              <span class="slider round"></span>
+          </label>
+      </div>
+      <p class="subtitle">Select this if you want to exclude certain areas from the cleaning.</p>
+  </div>
+
+  <div class="form-section" id="exclusion-section">
+      <h3 class="section-title">What to Exclude?</h3>
+      <div class="exclusion-grid">
+          <div class="exclusion-card" data-exclude="bedroom">
+              <div class="initial-view"><span>Bedroom</span></div>
+              <div class="stepper-view">
+                  <button class="exclude-minus">-</button>
+                  <input type="text" value="0" readonly>
+                  <button class="exclude-plus">+</button>
+              </div>
+          </div>
+          <div class="exclusion-card" data-exclude="fullBathroom">
+              <div class="initial-view"><span>Full Bathroom</span></div>
+              <div class="stepper-view">
+                  <button class="exclude-minus">-</button>
+                  <input type="text" value="0" readonly>
+                  <button class="exclude-plus">+</button>
+              </div>
+          </div>
+          <div class="exclusion-card" data-exclude="kitchen">
+              <div class="initial-view"><span>Kitchen</span></div>
+              <div class="stepper-view">
+                  <button class="exclude-minus">-</button>
+                  <input type="text" value="0" readonly>
+                  <button class="exclude-plus">+</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+
+  <div class="navigation-buttons">
+    <button id="back-btn" class="btn-secondary">Back</button>
+    <button id="next-step-btn-2" class="btn-primary">Next Step</button>
+  </div>
+</div>

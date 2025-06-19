@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking - Sweet Africa Global LLC</title>
+    
+    <link rel="stylesheet" href="css/global.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+  <style>
+        #logout-button {
+            position: fixed;       
+            top: 1.5rem;               
+            right: 1.5rem;             
+            z-index: 50;              
+            
+            background-color: white;
+            color: #4b5563;          
+            font-weight: 600;         
+            padding: 0.6rem 1.2rem;    
+            border-radius: 0.75rem;   
+            border: 1px solid #e5e7eb; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        #logout-button:hover {
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+</head>
+</head>
+<body>
+
+    <div class="fixed top-4 right-4 flex items-center space-x-4">
+    <a href="profile.html" id="profile-button" class="bg-white text-gray-700 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">
+        My Account
+    </a>
+    <button id="logout-button">Log Out</button>
+</div>
+
+    <div class="page-wrapper">
+        <div class="booking-container">
+            <div id="step-placeholder"></div>
+        </div>
+        <div class="summary-container hidden">
+            <div id="summary-placeholder"></div>
+        </div>
+    </div>
+    
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
+      authDomain: "sweet-africa-bookings.firebaseapp.com",
+      projectId: "sweet-africa-bookings",
+      storageBucket: "sweet-africa-bookings.firebasestorage.app",
+      messagingSenderId: "950167391030",
+      appId: "1:950167391030:web:1085602775ce912d220197"
+    };
+
+    // Initialize Firebase and export services
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    
+    window.db = db;
+    window.firebase = { collection, addDoc };
+
+    // --- USER AUTHENTICATION CHECK ---
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("User is logged in:", user.uid);
+            const userDocRef = doc(db, "users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+                const userData = userDocSnap.data();
+                bookingState.customerName = userData.name;
+                bookingState.customerEmail = userData.email;
+            }
+            loadApp();
+        } else {
+            console.log("No user logged in. Redirecting to login page.");
+            window.location.href = 'login.html';
+        }
+    });
+
+    const savedState = sessionStorage.getItem('bookingState');
+    const bookingState = savedState ? JSON.parse(savedState) : {
+        industry: 'Home Cleaning', service: 'Standard Clean', bedrooms: 1, bathrooms: 1, extras: [],
+        isPartialCleaning: false, excludedItems: {}, date: 'Not Selected', time: 'Not Selected',
+        customerName: '', customerEmail: '', customerPhone: '', customerAddress: '', customerApartment: ''
+    };
+    window.bookingState = bookingState;
+
+    const pricing = {
+        basePrice: 25.00, perBedroom: 15.50, perBathroom: 20.25,
+        extras: { organization: 30.00, laundry: 25.00, dishes: 20.00 },
+        deductions: { bedroom: -5.00, fullBathroom: -10.00, halfBathroom: -7.00, kitchen: -12.00, livingRoom: -8.00, basement: -20.00 }
+    };
+
+    function calculatePrice() {
+        let total = pricing.basePrice;
+        total += ((bookingState.bedrooms || 0) * pricing.perBedroom);
+        total += ((bookingState.bathrooms || 0) * pricing.perBathroom);
+        bookingState.extras.forEach(extra => { total += (pricing.extras[extra] || 0); });
+        if (bookingState.isPartialCleaning) {
+            for (const item in bookingState.excludedItems) {
+                total += ((bookingState.excludedItems[item] || 0) * (pricing.deductions[item] || 0));
+            }
+        }
+        return Math.max(total, 0);
+    }
+
+    function updateSummary() {
+        const summaryCard = document.getElementById("summary-placeholder");
+        if (!summaryCard || !summaryCard.innerHTML) return;
+        sessionStorage.setItem('bookingState', JSON.stringify(bookingState));
+        document.getElementById('summary-industry').textContent = bookingState.industry;
+        document.getElementById('summary-service').textContent = bookingState.service;
+        document.getElementById('summary-bedrooms').textContent = bookingState.bedrooms;
+        document.getElementById('summary-bathrooms').textContent = bookingState.bathrooms;
+        document.getElementById('summary-date').textContent = bookingState.date;
+        document.getElementById('summary-time').textContent = bookingState.time;
+        document.getElementById('summary-name').textContent = bookingState.customerName || '-';
+        document.getElementById('summary-email').textContent = bookingState.customerEmail || '-';
+        document.getElementById('summary-phone').textContent = bookingState.customerPhone || '-';
+        const fullAddress = bookingState.customerApartment ? `${bookingState.customerAddress}, ${bookingState.customerApartment}` : bookingState.customerAddress;
+        document.getElementById('summary-address').textContent = fullAddress || '-';
+        const finalPrice = calculatePrice();
+        const formattedPrice = `$${finalPrice.toFixed(2)}`;
+        document.getElementById('summary-subtotal').textContent = formattedPrice;
+        document.getElementById('summary-total').textContent = formattedPrice;
+        const extrasListDiv = document.getElementById('summary-extras-list');
+        extrasListDiv.innerHTML = '';
+        bookingState.extras.forEach(name => {
+            const el = document.createElement('div');
+            el.classList.add('summary-item');
+            el.innerHTML = `<span>${name.charAt(0).toUpperCase() + name.slice(1)}</span><span>+ $${pricing.extras[name].toFixed(2)}</span>`;
+            extrasListDiv.appendChild(el);
+        });
+        if (bookingState.isPartialCleaning) {
+            for (const item in bookingState.excludedItems) {
+                if (bookingState.excludedItems[item] > 0) {
+                    const count = bookingState.excludedItems[item];
+                    const deduction = pricing.deductions[item];
+                    const itemName = item.replace(/([A-Z])/g, ' $1').trim();
+                    const el = document.createElement('div');
+                    el.classList.add('summary-item');
+                    el.innerHTML = `<span>- ${count} ${itemName}</span><span>- $${(Math.abs(deduction) * count).toFixed(2)}</span>`;
+                    extrasListDiv.appendChild(el);
+                }
+            }
+        }
+    }
+    window.updateSummary = updateSummary;
+    window.calculatePrice = calculatePrice;
+    let currentStepName = '';
+    function cleanupStep(stepName) {
+      const oldCss = document.getElementById(`${stepName}-css`); if (oldCss) oldCss.remove();
+      const oldJs = document.getElementById(`${stepName}-js`); if (oldJs) oldJs.remove();
+    }
+    
+    window.loadStep = function(stepName) {
+      if (currentStepName) cleanupStep(currentStepName);
+      currentStepName = stepName;
+      sessionStorage.setItem('lastVisitedStep', stepName);
+      const summaryContainer = document.querySelector('.summary-container');
+      if (summaryContainer) {
+          summaryContainer.classList.toggle('hidden', stepName === 'step1_service');
+      }
+      updateSummary();
+      const placeholder = document.getElementById('step-placeholder');
+      if (!placeholder) return;
+      fetch(`sections/${stepName}/${stepName}.html`)
+        .then(res => res.ok ? res.text() : Promise.reject(res.statusText))
+        .then(html => {
+          placeholder.innerHTML = html;
+          const cssLink = document.createElement("link");
+          cssLink.rel = "stylesheet"; cssLink.id = `${stepName}-css`; cssLink.href = `sections/${stepName}/${stepName}.css`;
+          document.head.appendChild(cssLink);
+          fetch(`sections/${stepName}/${stepName}.js`).then(res => {
+            if (res.ok) {
+              const script = document.createElement("script");
+              script.id = `${stepName}-js`; script.src = `sections/${stepName}/${stepName}.js?v=${new Date().getTime()}`;
+              document.body.appendChild(script);
+            }
+          });
+        }).catch(error => console.error(`Failed to load step ${stepName}:`, error));
+    }
+    
+    function loadSummaryCard() {
+      const placeholder = document.getElementById("summary-placeholder");
+      if (!placeholder) return;
+      return fetch("sections/summary_card/summary_card.html")
+        .then(res => res.ok ? res.text() : Promise.reject(res.statusText))
+        .then(html => {
+          placeholder.innerHTML = html;
+          const cssLink = document.createElement("link");
+          cssLink.rel = "stylesheet"; cssLink.href = "sections/summary_card/summary_card.css";
+          document.head.appendChild(cssLink);
+        }).catch(error => console.error('Failed to load summary card:', error));
+    }
+
+    function loadApp() {
+        // --- LOGOUT BUTTON LOGIC ---
+        const logoutButton = document.getElementById('logout-button');
+        if(logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                signOut(auth).catch((error) => {
+                    console.error("Logout Error:", error);
+                });
+            });
+        }
+        
+        loadSummaryCard().then(() => {
+            const savedStep = sessionStorage.getItem('lastVisitedStep');
+            loadStep(savedStep || 'step1_service');
+        });
+    }
+</script>
+    
+</body>
+</html>

@@ -1,0 +1,64 @@
+.step-content h1 {
+  font-size: 28px;
+  color: #1a202c;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #718096;
+  margin-top: 0;
+  margin-bottom: 40px;
+}
+
+.form-section {
+  margin-bottom: 35px;
+}
+
+.section-title {
+  font-size: 20px;
+  color: #2d3748;
+  margin-bottom: 20px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.selectable-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-align: center;
+}
+
+.selectable-card:hover {
+  border-color: #8b6dff;
+  transform: translateY(-2px);
+}
+
+.selectable-card.selected {
+  border-color: #8b6dff;
+  background-color: #f3efff;
+  box-shadow: 0 4px 12px rgba(139, 109, 255, 0.15);
+}
+
+.selectable-card i {
+  font-size: 32px;
+  color: #8b6dff;
+  margin-bottom: 12px;
+}
+
+.selectable-card span {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+}
