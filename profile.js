@@ -13,6 +13,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  setDoc,
 } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js)";
 
 // Your web app's Firebase configuration
@@ -38,13 +39,11 @@ const cancelEditButton = document.getElementById("cancel-edit-button");
 const saveProfileButton = document.getElementById("save-profile-button");
 const successMessage = document.getElementById("success-message");
 
-// View mode elements
 const viewName = document.getElementById("view-name");
 const viewEmail = document.getElementById("view-email");
 const viewPhone = document.getElementById("view-phone");
 const viewAddress = document.getElementById("view-address");
 
-// Form input elements
 const profileNameInput = document.getElementById("profile-name");
 const profileEmailInput = document.getElementById("profile-email");
 const profilePhoneInput = document.getElementById("profile-phone");
@@ -58,7 +57,6 @@ const loadingMessage = document.getElementById("loading-message");
 const logoutButton = document.getElementById("logout-button");
 
 function populateUserData(userData) {
-  // Populate view mode
   viewName.textContent = userData.name || "N/A";
   viewEmail.textContent = userData.email || "N/A";
   viewPhone.textContent = userData.phone || "N/A";
@@ -72,7 +70,6 @@ function populateUserData(userData) {
     .join(", ");
   viewAddress.textContent = fullAddress || "N/A";
 
-  // Populate edit form
   profileNameInput.value = userData.name || "";
   profileEmailInput.value = userData.email || "";
   profilePhoneInput.value = userData.phone || "";
@@ -86,21 +83,43 @@ function populateUserData(userData) {
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     const userDocRef = doc(db, "users", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
+    let userDocSnap = await getDoc(userDocRef);
 
-    if (userDocSnap.exists()) {
-      populateUserData(userDocSnap.data());
+    // --- NEW ROBUST LOGIC ---
+    if (!userDocSnap.exists()) {
+      console.log(
+        "User document not found. Creating one for existing auth user."
+      );
+      try {
+        const initialData = {
+          email: user.email,
+          name: user.displayName || "",
+          phone: "",
+          address: "",
+          city: "",
+          state: "",
+          zip: "",
+        };
+        await setDoc(userDocRef, initialData);
+        userDocSnap = await getDoc(userDocRef);
+      } catch (error) {
+        console.error("Error creating user document:", error);
+        return;
+      }
     }
+
+    const userData = userDocSnap.data();
+    populateUserData(userData);
 
     fetchAndDisplayBookings(user.email);
 
-    // --- Event Listeners for View/Edit Toggle ---
     editProfileButton.addEventListener("click", () => {
       viewModeContent.classList.add("hidden");
       profileForm.classList.remove("hidden");
     });
 
     cancelEditButton.addEventListener("click", () => {
+      populateUserData(userData); // Reset form to original data
       profileForm.classList.add("hidden");
       viewModeContent.classList.remove("hidden");
     });
@@ -122,7 +141,7 @@ onAuthStateChanged(auth, async (user) => {
 
       try {
         await updateDoc(userDocRef, updatedData);
-        populateUserData(updatedData); // Re-populate view and form with new data
+        populateUserData(updatedData);
         profileForm.classList.add("hidden");
         viewModeContent.classList.remove("hidden");
         successMessage.classList.remove("hidden");
@@ -140,11 +159,9 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- Fetch and Display User's Bookings ---
 async function fetchAndDisplayBookings(userEmail) {
   const bookingsRef = collection(db, "bookings");
   const q = query(bookingsRef, where("customerEmail", "==", userEmail));
-
   const querySnapshot = await getDocs(q);
 
   loadingMessage.style.display = "none";
@@ -184,7 +201,6 @@ async function fetchAndDisplayBookings(userEmail) {
   });
 }
 
-// --- Logout Logic ---
 logoutButton.addEventListener("click", () => {
   signOut(auth).catch((error) => {
     console.error("Logout Error:", error);
