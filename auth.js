@@ -1,15 +1,15 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { initializeApp } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js)";
 import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+} from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js)";
 import {
   getFirestore,
   doc,
   setDoc,
   getDoc,
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+} from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js)";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -32,6 +32,7 @@ const signupForm = document.getElementById("signup-form");
 const showSignupButton = document.getElementById("show-signup");
 const showLoginButton = document.getElementById("show-login");
 const errorMessageElement = document.getElementById("error-message");
+const signupPhoneInput = document.getElementById("signup-phone");
 
 // --- Form Switching Logic ---
 showSignupButton.addEventListener("click", (e) => {
@@ -48,6 +49,24 @@ showLoginButton.addEventListener("click", (e) => {
   errorMessageElement.textContent = "";
 });
 
+// --- NEW: Phone Number Auto-Formatting ---
+signupPhoneInput.addEventListener("input", (e) => {
+  const input = e.target;
+  const digits = input.value.replace(/\D/g, "").substring(0, 10);
+  let formatted = "";
+
+  if (digits.length > 0) {
+    formatted = `(${digits.substring(0, 3)}`;
+  }
+  if (digits.length > 3) {
+    formatted += `) ${digits.substring(3, 6)}`;
+  }
+  if (digits.length > 6) {
+    formatted += `-${digits.substring(6, 10)}`;
+  }
+  input.value = formatted;
+});
+
 // --- Sign Up Logic (Now with all fields) ---
 signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -56,7 +75,7 @@ signupForm.addEventListener("submit", async (e) => {
   const name = document.getElementById("signup-name").value;
   const email = document.getElementById("signup-email").value;
   const password = document.getElementById("signup-password").value;
-  const phone = document.getElementById("signup-phone").value;
+  const phone = signupPhoneInput.value;
   const address = document.getElementById("signup-address").value;
   const city = document.getElementById("signup-city").value;
   const zip = document.getElementById("signup-zip").value;
