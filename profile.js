@@ -108,7 +108,7 @@ onAuthStateChanged(auth, async (user) => {
       }
     }
 
-    const userData = userDocSnap.data();
+    let userData = userDocSnap.data();
     populateUserData(userData);
 
     fetchAndDisplayBookings(user.email);
@@ -141,7 +141,8 @@ onAuthStateChanged(auth, async (user) => {
 
       try {
         await updateDoc(userDocRef, updatedData);
-        populateUserData(updatedData);
+        userData = { ...userData, ...updatedData }; // Update local data object
+        populateUserData(userData);
         profileForm.classList.add("hidden");
         viewModeContent.classList.remove("hidden");
         successMessage.classList.remove("hidden");
