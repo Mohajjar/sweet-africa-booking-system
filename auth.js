@@ -1,18 +1,17 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { initializeApp } from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js)";
 import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+} from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js)";
 import {
   getFirestore,
   doc,
   setDoc,
   getDoc,
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+} from "[https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js](https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js)";
 
-// Your web app's Firebase configuration (same as in index.html)
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
   authDomain: "sweet-africa-bookings.firebaseapp.com",
@@ -49,13 +48,19 @@ showLoginButton.addEventListener("click", (e) => {
   errorMessageElement.textContent = "";
 });
 
-// --- Sign Up Logic ---
+// --- Sign Up Logic (Now with all fields) ---
 signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  // Collect all data from the new form fields
   const name = document.getElementById("signup-name").value;
   const email = document.getElementById("signup-email").value;
   const password = document.getElementById("signup-password").value;
+  const phone = document.getElementById("signup-phone").value;
+  const address = document.getElementById("signup-address").value;
+  const city = document.getElementById("signup-city").value;
+  const zip = document.getElementById("signup-zip").value;
+  const gender = document.getElementById("signup-gender").value;
 
   try {
     const userCredential = await createUserWithEmailAndPassword(
@@ -65,11 +70,15 @@ signupForm.addEventListener("submit", async (e) => {
     );
     const user = userCredential.user;
 
-    // Save user's name and email to Firestore
+    // Save all collected information to the user's document in Firestore
     await setDoc(doc(db, "users", user.uid), {
       name: name,
       email: email,
-      // New users do NOT get a role by default
+      phone: phone,
+      address: address,
+      city: city,
+      zip: zip,
+      gender: gender,
     });
 
     // Redirect to the booking page after successful signup
@@ -79,7 +88,7 @@ signupForm.addEventListener("submit", async (e) => {
   }
 });
 
-// --- Login Logic (Now with Admin Check) ---
+// --- Login Logic (with Admin Check) ---
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -94,16 +103,12 @@ loginForm.addEventListener("submit", async (e) => {
     );
     const user = userCredential.user;
 
-    // --- THIS IS THE NEW "SMART" PART ---
-    // Check the user's role in the database
     const userDocRef = doc(db, "users", user.uid);
     const userDocSnap = await getDoc(userDocRef);
 
     if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
-      // If user is an admin, redirect to the admin dashboard
       window.location.href = "admin.html";
     } else {
-      // Otherwise, redirect to the regular booking page
       window.location.href = "index.html";
     }
   } catch (error) {
