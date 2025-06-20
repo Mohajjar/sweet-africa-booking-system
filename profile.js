@@ -85,7 +85,6 @@ onAuthStateChanged(auth, async (user) => {
     const userDocRef = doc(db, "users", user.uid);
     let userDocSnap = await getDoc(userDocRef);
 
-    // --- NEW ROBUST LOGIC ---
     if (!userDocSnap.exists()) {
       console.log(
         "User document not found. Creating one for existing auth user."
