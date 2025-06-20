@@ -49,7 +49,7 @@ showLoginButton.addEventListener("click", (e) => {
   errorMessageElement.textContent = "";
 });
 
-// --- NEW: Phone Number Auto-Formatting ---
+// --- Phone Number Auto-Formatting ---
 signupPhoneInput.addEventListener("input", (e) => {
   const input = e.target;
   const digits = input.value.replace(/\D/g, "").substring(0, 10);
