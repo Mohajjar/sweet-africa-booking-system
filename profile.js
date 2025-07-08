@@ -1,9 +1,9 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { initializeApp } from "https://esm.run/firebase/app";
 import {
   getAuth,
   onAuthStateChanged,
   signOut,
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+} from "https://esm.run/firebase/auth";
 import {
   getFirestore,
   collection,
@@ -14,7 +14,7 @@ import {
   getDoc,
   updateDoc,
   setDoc,
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+} from "https://esm.run/firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
