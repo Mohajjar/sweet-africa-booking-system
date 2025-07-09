@@ -50,7 +50,7 @@ function getStatusColor(status) {
   const s = String(status || "").toLowerCase();
   switch (s) {
     case "pending":
-      return "#fcd34d";
+      return "#facc15";
     case "confirmed":
       return "#60a5fa";
     case "completed":
@@ -68,6 +68,7 @@ const mainContent = document.querySelector("main");
 const adminContentDiv = document.getElementById("admin-content");
 const navBookings = document.getElementById("nav-bookings");
 const navCustomers = document.getElementById("nav-customers");
+const navCalendar = document.getElementById("nav-calendar");
 
 // --- MAIN APP LOGIC ---
 onAuthStateChanged(auth, async (user) => {
@@ -77,7 +78,7 @@ onAuthStateChanged(auth, async (user) => {
     if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
       mainContent.style.display = "block";
       setupNavigation();
-      loadBookingsView();
+      loadBookingsView(); // Default view on page load
     } else {
       document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="index.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
     }
@@ -86,6 +87,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+// --- Navigation Logic ---
 function setupNavigation() {
   navBookings.addEventListener("click", () => {
     setActiveTab(navBookings);
@@ -95,14 +97,36 @@ function setupNavigation() {
     setActiveTab(navCustomers);
     loadCustomersView();
   });
+  navCalendar.addEventListener("click", () => {
+    setActiveTab(navCalendar);
+    loadCalendarView();
+  });
 }
 
 function setActiveTab(activeButton) {
   navBookings.classList.remove("admin-nav-active");
   navCustomers.classList.remove("admin-nav-active");
+  navCalendar.classList.remove("admin-nav-active");
   activeButton.classList.add("admin-nav-active");
 }
 
+// --- View Loaders ---
+async function loadBookingsView() {
+  adminContentDiv.innerHTML = `<div class="bg-white shadow-lg rounded-2xl overflow-hidden"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200"><tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr></tbody></table></div>`;
+  await fetchAndDisplayBookings();
+}
+
+async function loadCustomersView() {
+  adminContentDiv.innerHTML = `<div class="bg-white shadow-lg rounded-2xl overflow-hidden"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="customers-table-body" class="bg-white divide-y divide-gray-200"><tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading customers...</td></tr></tbody></table></div>`;
+  await fetchAndDisplayCustomers();
+}
+
+async function loadCalendarView() {
+  adminContentDiv.innerHTML = `<div id="booking-calendar"></div>`;
+  await initializeAndDisplayCalendar();
+}
+
+// --- Data Fetching & Display ---
 async function initializeAndDisplayCalendar() {
   const calendarEl = document.getElementById("booking-calendar");
   if (!calendarEl) return;
@@ -129,7 +153,6 @@ async function initializeAndDisplayCalendar() {
         right: "dayGridMonth,timeGridWeek,listWeek",
       },
       events: events,
-      editable: false,
     });
     calendar.render();
   } catch (error) {
@@ -137,32 +160,6 @@ async function initializeAndDisplayCalendar() {
     calendarEl.innerHTML =
       '<p class="text-red-500 text-center">Error loading calendar events.</p>';
   }
-}
-
-async function loadBookingsView() {
-  adminContentDiv.innerHTML = `
-        <div id="booking-calendar" class="mb-8"></div>
-        <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
-            <table class="min-w-full"><thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-            </thead><tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200">
-            <tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr></tbody></table>
-        </div>
-    `;
-  await initializeAndDisplayCalendar();
-  await fetchAndDisplayBookings();
-}
-
-async function loadCustomersView() {
-  adminContentDiv.innerHTML = `<div class="bg-white shadow-lg rounded-2xl overflow-hidden"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="customers-table-body" class="bg-white divide-y divide-gray-200"><tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading customers...</td></tr></tbody></table></div>`;
-  await fetchAndDisplayCustomers();
 }
 
 async function fetchAndDisplayBookings() {
@@ -214,7 +211,6 @@ async function fetchAndDisplayBookings() {
           badge.className = `status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
             newStatus
           )}`;
-          initializeAndDisplayCalendar();
         }
         event.target.disabled = false;
       });
@@ -267,6 +263,7 @@ async function updateBookingStatus(bookingId, newStatus) {
   }
 }
 
+// --- Logout Logic ---
 logoutButton.addEventListener("click", () => {
   signOut(auth).catch((error) => console.error("Logout Error:", error));
 });
