@@ -115,6 +115,21 @@ onAuthStateChanged(auth, async (user) => {
         document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this profile.</p><a href="admin.html" class="mt-4 text-blue-500 hover:underline">Back to Admin Panel</a></div>`;
         return;
       }
+      // If an admin is viewing a profile, add a "Back to Admin" button
+      const navContainer = document.querySelector(
+        "header nav .flex.items-center.space-x-2"
+      );
+      if (navContainer) {
+        const adminButton = document.createElement("a");
+        adminButton.href = "admin.html";
+        adminButton.className =
+          "bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition";
+        adminButton.textContent = "Back to Admin";
+        // Replace the "My Account" button with this one
+        navContainer.innerHTML = ""; // Clear existing buttons
+        navContainer.appendChild(adminButton);
+        navContainer.appendChild(logoutButton); // Re-add the logout button
+      }
     }
 
     if (!userDocSnap.exists()) {
