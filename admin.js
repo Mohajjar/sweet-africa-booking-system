@@ -121,13 +121,33 @@ async function loadCustomersView() {
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="customers-table-body" class="bg-white divide-y divide-gray-200">
-                    <tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">Loading customers...</td></tr>
+                    <tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading customers...</td></tr>
                 </tbody>
             </table>
+        </div>
+        <div id="edit-customer-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Edit Customer</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <form id="edit-customer-form">
+                            <input type="hidden" id="edit-customer-id">
+                            <input class="mb-3 px-3 py-2 text-gray-700 border rounded-md w-full" type="text" id="edit-customer-name" placeholder="Name">
+                            <input class="mb-3 px-3 py-2 text-gray-700 border rounded-md w-full" type="email" id="edit-customer-email" placeholder="Email" disabled>
+                            <input class="mb-3 px-3 py-2 text-gray-700 border rounded-md w-full" type="tel" id="edit-customer-phone" placeholder="Phone">
+                            <div class="items-center px-4 py-3">
+                                <button id="save-customer-button" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">Save</button>
+                                <button id="cancel-edit-customer-button" type="button" class="mt-3 px-4 py-2 bg-gray-200 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     `;
   await fetchAndDisplayCustomers();
@@ -149,13 +169,10 @@ async function fetchAndDisplayBookings() {
       const booking = docSnap.data();
       const row = document.createElement("tr");
       row.id = `booking-row-${bookingId}`;
-
-      // Use the helper function for consistent colors
       const statusClasses = getStatusClasses(booking.status);
       const statusBadge = `<span class="status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses}">${
         booking.status || "N/A"
       }</span>`;
-
       const formattedPrice =
         typeof booking.totalPrice === "number"
           ? `$${booking.totalPrice.toFixed(2)}`
@@ -169,12 +186,9 @@ async function fetchAndDisplayBookings() {
       }>Completed</option><option value="Cancelled" ${
         booking.status === "Cancelled" ? "selected" : ""
       }>Cancelled</option></select>`;
-
       row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${booking.customerName}</div><div class="text-sm text-gray-500">${booking.customerEmail}</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.service}</div><div class="text-sm text-gray-500">${booking.bedrooms} bed, ${booking.bathrooms} bath</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.date}</div><div class="text-sm text-gray-500">${booking.time}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${statusBadge}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formattedPrice}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsDropdown}</td>`;
       bookingsTableBody.appendChild(row);
     });
-
-    // Attach event listeners to the new dropdowns
     document.querySelectorAll(".status-select").forEach((selectElement) => {
       selectElement.addEventListener("change", async (event) => {
         const newStatus = event.target.value;
@@ -185,7 +199,6 @@ async function fetchAndDisplayBookings() {
           const row = document.getElementById(`booking-row-${bookingId}`);
           const badge = row.querySelector(".status-badge");
           badge.textContent = newStatus;
-          // Use the helper function again for consistency on update
           badge.className = `status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
             newStatus
           )}`;
@@ -207,7 +220,7 @@ async function fetchAndDisplayCustomers() {
     customersTableBody.innerHTML = "";
     if (querySnapshot.empty) {
       customersTableBody.innerHTML =
-        '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">No customers found.</td></tr>';
+        '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No customers found.</td></tr>';
       return;
     }
     querySnapshot.forEach((docSnap) => {
@@ -218,13 +231,57 @@ async function fetchAndDisplayCustomers() {
         user.name || "N/A"
       }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
         user.email || "N/A"
-      }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userId}</td>`;
+      }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+        user.phone || "N/A"
+      }</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button class="text-indigo-600 hover:text-indigo-900 edit-customer-button" data-user-id="${userId}">Edit</button></td>`;
       customersTableBody.appendChild(row);
     });
+    document.querySelectorAll(".edit-customer-button").forEach((button) => {
+      button.addEventListener("click", async (event) => {
+        const userId = event.target.dataset.userId;
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          document.getElementById("edit-customer-id").value = userId;
+          document.getElementById("edit-customer-name").value =
+            userData.name || "";
+          document.getElementById("edit-customer-email").value =
+            userData.email || "";
+          document.getElementById("edit-customer-phone").value =
+            userData.phone || "";
+          document
+            .getElementById("edit-customer-modal")
+            .classList.remove("hidden");
+        }
+      });
+    });
+    document
+      .getElementById("edit-customer-form")
+      .addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const userId = document.getElementById("edit-customer-id").value;
+        const name = document.getElementById("edit-customer-name").value;
+        const phone = document.getElementById("edit-customer-phone").value;
+        const userRef = doc(db, "users", userId);
+        try {
+          await updateDoc(userRef, { name, phone });
+          document
+            .getElementById("edit-customer-modal")
+            .classList.add("hidden");
+          loadCustomersView(); // Refresh the list
+        } catch (error) {
+          console.error("Error updating customer: ", error);
+        }
+      });
+    document
+      .getElementById("cancel-edit-customer-button")
+      .addEventListener("click", () => {
+        document.getElementById("edit-customer-modal").classList.add("hidden");
+      });
   } catch (error) {
     console.error("Error fetching customers: ", error);
     customersTableBody.innerHTML =
-      '<tr><td colspan="3" class="px-6 py-4 text-center text-red-500">Error loading customers.</td></tr>';
+      '<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">Error loading customers.</td></tr>';
   }
 }
 
