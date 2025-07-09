@@ -30,6 +30,23 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// --- NEW HELPER FUNCTION FOR STATUS COLORS ---
+function getStatusClasses(status) {
+  const s = String(status || "").toLowerCase();
+  switch (s) {
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "confirmed":
+      return "bg-blue-100 text-blue-800";
+    case "completed":
+      return "bg-green-100 text-green-800";
+    case "cancelled":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
+
 // --- DOM Elements ---
 const logoutButton = document.getElementById("logout-button");
 const mainContent = document.querySelector("main");
@@ -42,11 +59,10 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     const userDocRef = doc(db, "users", user.uid);
     const userDocSnap = await getDoc(userDocRef);
-
     if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
       mainContent.style.display = "block";
       setupNavigation();
-      loadBookingsView(); // Load bookings by default
+      loadBookingsView();
     } else {
       document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="index.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
     }
@@ -97,7 +113,7 @@ async function loadBookingsView() {
   await fetchAndDisplayBookings();
 }
 
-function loadCustomersView() {
+async function loadCustomersView() {
   adminContentDiv.innerHTML = `
         <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
             <table class="min-w-full">
@@ -114,10 +130,10 @@ function loadCustomersView() {
             </table>
         </div>
     `;
-  fetchAndDisplayCustomers();
+  await fetchAndDisplayCustomers();
 }
 
-// --- Data Fetching ---
+// --- Data Fetching & Display ---
 async function fetchAndDisplayBookings() {
   const bookingsTableBody = document.getElementById("bookings-table-body");
   try {
@@ -133,11 +149,13 @@ async function fetchAndDisplayBookings() {
       const booking = docSnap.data();
       const row = document.createElement("tr");
       row.id = `booking-row-${bookingId}`;
-      const statusBadge = `<span class="status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-        booking.status === "Pending"
-          ? "bg-yellow-100 text-yellow-800"
-          : "bg-green-100 text-green-800"
-      }">${booking.status || "N/A"}</span>`;
+
+      // Use the helper function for consistent colors
+      const statusClasses = getStatusClasses(booking.status);
+      const statusBadge = `<span class="status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses}">${
+        booking.status || "N/A"
+      }</span>`;
+
       const formattedPrice =
         typeof booking.totalPrice === "number"
           ? `$${booking.totalPrice.toFixed(2)}`
@@ -151,9 +169,12 @@ async function fetchAndDisplayBookings() {
       }>Completed</option><option value="Cancelled" ${
         booking.status === "Cancelled" ? "selected" : ""
       }>Cancelled</option></select>`;
+
       row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${booking.customerName}</div><div class="text-sm text-gray-500">${booking.customerEmail}</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.service}</div><div class="text-sm text-gray-500">${booking.bedrooms} bed, ${booking.bathrooms} bath</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.date}</div><div class="text-sm text-gray-500">${booking.time}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${statusBadge}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formattedPrice}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsDropdown}</td>`;
       bookingsTableBody.appendChild(row);
     });
+
+    // Attach event listeners to the new dropdowns
     document.querySelectorAll(".status-select").forEach((selectElement) => {
       selectElement.addEventListener("change", async (event) => {
         const newStatus = event.target.value;
@@ -164,13 +185,10 @@ async function fetchAndDisplayBookings() {
           const row = document.getElementById(`booking-row-${bookingId}`);
           const badge = row.querySelector(".status-badge");
           badge.textContent = newStatus;
-          badge.className = `status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full`;
-          if (newStatus === "Pending")
-            badge.classList.add("bg-yellow-100", "text-yellow-800");
-          else if (newStatus === "Completed" || newStatus === "Confirmed")
-            badge.classList.add("bg-green-100", "text-green-800");
-          else if (newStatus === "Cancelled")
-            badge.classList.add("bg-red-100", "text-red-800");
+          // Use the helper function again for consistency on update
+          badge.className = `status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
+            newStatus
+          )}`;
         }
         event.target.disabled = false;
       });
@@ -178,11 +196,10 @@ async function fetchAndDisplayBookings() {
   } catch (error) {
     console.error("Error fetching bookings: ", error);
     bookingsTableBody.innerHTML =
-      '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Error loading bookings. Please check the console.</td></tr>';
+      '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Error loading bookings. Please check permissions and console.</td></tr>';
   }
 }
 
-// --- THIS FUNCTION IS NOW FULLY IMPLEMENTED ---
 async function fetchAndDisplayCustomers() {
   const customersTableBody = document.getElementById("customers-table-body");
   try {
@@ -197,15 +214,11 @@ async function fetchAndDisplayCustomers() {
       const userId = docSnap.id;
       const user = docSnap.data();
       const row = document.createElement("tr");
-      row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
-                  user.name || "N/A"
-                }</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-                  user.email || "N/A"
-                }</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userId}</td>
-            `;
+      row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
+        user.name || "N/A"
+      }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+        user.email || "N/A"
+      }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${userId}</td>`;
       customersTableBody.appendChild(row);
     });
   } catch (error) {
