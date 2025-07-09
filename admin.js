@@ -143,7 +143,28 @@ async function initializeAndDisplayCalendar() {
 }
 
 async function loadBookingsView() {
-  adminContentDiv.innerHTML = `<div class="bg-white shadow-lg rounded-2xl overflow-hidden"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200"><tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr></tbody></table></div>`;
+  adminContentDiv.innerHTML = `
+        <div id="booking-calendar" class="mb-8"></div>
+
+        <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200">
+                    <tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+  // After setting the HTML, fetch data for both the calendar and the table
   await fetchAndDisplayBookings();
 }
 async function loadCustomersView() {

@@ -37,21 +37,19 @@
     </header>
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8" style="display: none;">
-        <nav class="flex border-b border-gray-200 mb-6">
-            <button id="nav-bookings" class="admin-nav-active py-4 px-6 font-semibold text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
-                Bookings
-            </button>
-            <button id="nav-customers" class="py-4 px-6 font-semibold text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
-                Customers
-            </button>
-        </nav>
-        
-        <div id="booking-calendar"></div>
-        
-        <div id="admin-content" class="mt-6">
-            <p class="text-center text-gray-500">Loading...</p>
-        </div>
-    </main>
+    <nav class="flex border-b border-gray-200 mb-6">
+        <button id="nav-bookings" class="admin-nav-active py-4 px-6 font-semibold text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            Bookings
+        </button>
+        <button id="nav-customers" class="py-4 px-6 font-semibold text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            Customers
+        </button>
+    </nav>
+    
+    <div id="admin-content">
+        <p class="text-center text-gray-500">Loading...</p>
+    </div>
+</main>
 
     <script src="admin.js" type="module"></script>
 
