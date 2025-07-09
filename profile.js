@@ -79,6 +79,22 @@ function populateUserData(userData) {
   profileZipInput.value = userData.zip || "";
 }
 
+function getStatusClasses(status) {
+  const s = String(status || "").toLowerCase();
+  switch (s) {
+    case "pending":
+      return "bg-yellow-200 text-yellow-800";
+    case "confirmed":
+      return "bg-blue-200 text-blue-800";
+    case "completed":
+      return "bg-green-200 text-green-800";
+    case "cancelled":
+      return "bg-red-200 text-red-800";
+    default:
+      return "bg-gray-200 text-gray-800";
+  }
+}
+
 // --- Main Logic ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
