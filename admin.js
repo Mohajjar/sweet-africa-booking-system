@@ -1,3 +1,5 @@
+// admin.js
+
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
@@ -30,7 +32,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- NEW HELPER FUNCTION FOR STATUS COLORS ---
+// --- HELPER FUNCTION FOR STATUS COLORS ---
 function getStatusClasses(status) {
   const s = String(status || "").toLowerCase();
   switch (s) {
@@ -60,13 +62,15 @@ onAuthStateChanged(auth, async (user) => {
     const userDocRef = doc(db, "users", user.uid);
     const userDocSnap = await getDoc(userDocRef);
     if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
-      mainContent.style.display = "block";
+      mainContent.style.display = "block"; // Show content only for admins
       setupNavigation();
-      loadBookingsView();
+      loadBookingsView(); // Load the default view
     } else {
+      // If user is not an admin, show access denied message
       document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="index.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
     }
   } else {
+    // If no user is logged in, redirect to the login page
     window.location.href = "login.html";
   }
 });
@@ -130,25 +134,6 @@ async function loadCustomersView() {
                 </tbody>
             </table>
         </div>
-        <div id="edit-customer-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3 text-center">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Edit Customer</h3>
-                    <div class="mt-2 px-7 py-3">
-                        <form id="edit-customer-form">
-                            <input type="hidden" id="edit-customer-id">
-                            <input class="mb-3 px-3 py-2 text-gray-700 border rounded-md w-full" type="text" id="edit-customer-name" placeholder="Name">
-                            <input class="mb-3 px-3 py-2 text-gray-700 border rounded-md w-full" type="email" id="edit-customer-email" placeholder="Email" disabled>
-                            <input class="mb-3 px-3 py-2 text-gray-700 border rounded-md w-full" type="tel" id="edit-customer-phone" placeholder="Phone">
-                            <div class="items-center px-4 py-3">
-                                <button id="save-customer-button" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">Save</button>
-                                <button id="cancel-edit-customer-button" type="button" class="mt-3 px-4 py-2 bg-gray-200 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
     `;
   await fetchAndDisplayCustomers();
 }
@@ -189,6 +174,7 @@ async function fetchAndDisplayBookings() {
       row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${booking.customerName}</div><div class="text-sm text-gray-500">${booking.customerEmail}</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.service}</div><div class="text-sm text-gray-500">${booking.bedrooms} bed, ${booking.bathrooms} bath</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.date}</div><div class="text-sm text-gray-500">${booking.time}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${statusBadge}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formattedPrice}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsDropdown}</td>`;
       bookingsTableBody.appendChild(row);
     });
+
     document.querySelectorAll(".status-select").forEach((selectElement) => {
       selectElement.addEventListener("change", async (event) => {
         const newStatus = event.target.value;
@@ -227,25 +213,13 @@ async function fetchAndDisplayCustomers() {
       const userId = docSnap.id;
       const user = docSnap.data();
       const row = document.createElement("tr");
-
-      // This new row structure includes the User ID and a direct link for the "Edit" button
-      row.innerHTML = `
-        <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm font-medium text-gray-900">${
-              user.name || "N/A"
-            }</div>
-            <div class="text-sm text-gray-400">${userId}</div>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-          user.email || "N/A"
-        }</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-          user.phone || "N/A"
-        }</td>
-        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-            <a href="profile.html?id=${userId}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-        </td>
-      `;
+      row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
+        user.name || "N/A"
+      }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+        user.email || "N/A"
+      }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+        user.phone || "N/A"
+      }</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><a href="profile.html?id=${userId}" class="text-indigo-600 hover:text-indigo-900">Edit</a></td>`;
       customersTableBody.appendChild(row);
     });
   } catch (error) {
