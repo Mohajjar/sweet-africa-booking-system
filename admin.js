@@ -50,15 +50,15 @@ function getStatusColor(status) {
   const s = String(status || "").toLowerCase();
   switch (s) {
     case "pending":
-      return "#fcd34d"; // Yellow
+      return "#fcd34d";
     case "confirmed":
-      return "#60a5fa"; // Blue
+      return "#60a5fa";
     case "completed":
-      return "#4ade80"; // Green
+      return "#4ade80";
     case "cancelled":
-      return "#f87171"; // Red
+      return "#f87171";
     default:
-      return "#9ca3af"; // Grey
+      return "#9ca3af";
   }
 }
 
@@ -77,8 +77,7 @@ onAuthStateChanged(auth, async (user) => {
     if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
       mainContent.style.display = "block";
       setupNavigation();
-      initializeAndDisplayCalendar(); // Initialize calendar on load
-      loadBookingsView(); // Load the default view
+      loadBookingsView();
     } else {
       document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="index.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
     }
@@ -113,10 +112,8 @@ async function initializeAndDisplayCalendar() {
       const booking = doc.data();
       const eventColor = getStatusColor(booking.status);
       const timeParts = booking.time ? booking.time.split(" ")[0] : "12:00";
-      const dateStr = booking.date; // e.g., "July 10, 2025"
-      // Convert "Month Day, Year" to "YYYY-MM-DD"
+      const dateStr = booking.date;
       const isoDate = new Date(dateStr).toISOString().split("T")[0];
-
       return {
         title: `${booking.customerName} - ${booking.service}`,
         start: `${isoDate}T${timeParts}:00`,
@@ -145,28 +142,24 @@ async function initializeAndDisplayCalendar() {
 async function loadBookingsView() {
   adminContentDiv.innerHTML = `
         <div id="booking-calendar" class="mb-8"></div>
-
         <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
-            <table class="min-w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200">
-                    <tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr>
-                </tbody>
-            </table>
+            <table class="min-w-full"><thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+            </thead><tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200">
+            <tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr></tbody></table>
         </div>
     `;
-  // After setting the HTML, fetch data for both the calendar and the table
+  await initializeAndDisplayCalendar();
   await fetchAndDisplayBookings();
 }
+
 async function loadCustomersView() {
   adminContentDiv.innerHTML = `<div class="bg-white shadow-lg rounded-2xl overflow-hidden"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="customers-table-body" class="bg-white divide-y divide-gray-200"><tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading customers...</td></tr></tbody></table></div>`;
   await fetchAndDisplayCustomers();
@@ -221,7 +214,7 @@ async function fetchAndDisplayBookings() {
           badge.className = `status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
             newStatus
           )}`;
-          initializeAndDisplayCalendar(); // Refresh calendar on status change
+          initializeAndDisplayCalendar();
         }
         event.target.disabled = false;
       });
