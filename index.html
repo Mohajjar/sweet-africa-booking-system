@@ -57,35 +57,25 @@
       appId: "1:950167391030:web:1085602775ce912d220197"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
     
+    // Make key functions and objects globally available for modular scripts
     window.db = db;
     window.firebase = { collection, addDoc };
+    window.loadStep = loadStep;
+    window.updateSummary = updateSummary;
 
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            const userDocRef = doc(db, "users", user.uid);
-            const userDocSnap = await getDoc(userDocRef);
-            if (userDocSnap.exists()) {
-                const userData = userDocSnap.data();
-                bookingState.customerName = userData.name;
-                bookingState.customerEmail = userData.email;
-            }
-            loadApp();
-        } else {
-            window.location.href = 'login.html';
-        }
-    });
-
+    // --- STATE MANAGEMENT & PRICING ---
     const savedState = sessionStorage.getItem('bookingState');
     const bookingState = savedState ? JSON.parse(savedState) : {
         industry: 'Home Cleaning', service: 'Standard Clean', bedrooms: 1, bathrooms: 1, extras: [],
         isPartialCleaning: false, excludedItems: {}, date: 'Not Selected', time: 'Not Selected',
         customerName: '', customerEmail: '', customerPhone: '', customerAddress: '', customerApartment: ''
     };
-    window.bookingState = bookingState;
+    window.bookingState = bookingState; // Make state globally available
 
     const pricing = {
         basePrice: 25.00, perBedroom: 15.50, perBathroom: 20.25,
@@ -105,7 +95,6 @@
         }
         return Math.max(total, 0);
     }
-    window.calculatePrice = calculatePrice;
 
     function updateSummary() {
         const summaryCard = document.getElementById("summary-placeholder");
@@ -148,15 +137,15 @@
             }
         }
     }
-    window.updateSummary = updateSummary;
 
+    // --- DYNAMIC PAGE LOADING LOGIC ---
     let currentStepName = '';
     function cleanupStep(stepName) {
       const oldCss = document.getElementById(`${stepName}-css`); if (oldCss) oldCss.remove();
       const oldJs = document.getElementById(`${stepName}-js`); if (oldJs) oldJs.remove();
     }
     
-    window.loadStep = function(stepName) {
+    function loadStep(stepName) {
       if (currentStepName) cleanupStep(currentStepName);
       currentStepName = stepName;
       sessionStorage.setItem('lastVisitedStep', stepName);
@@ -197,6 +186,7 @@
         }).catch(error => console.error('Failed to load summary card:', error));
     }
 
+    // Main app loader function
     function loadApp() {
         const logoutButton = document.getElementById('logout-button');
         if(logoutButton) {
@@ -212,6 +202,26 @@
             loadStep(savedStep || 'step1_service');
         });
     }
+
+    // --- AUTHENTICATION CHECK ---
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // User is signed in, pre-populate state with their details from Firestore
+            const userDocRef = doc(db, "users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+                const userData = userDocSnap.data();
+                bookingState.customerName = userData.name || '';
+                bookingState.customerEmail = userData.email || '';
+                // Add any other fields you want to pre-populate
+            }
+            // Now that user is confirmed and data is pre-populated, load the app
+            loadApp();
+        } else {
+            // User is signed out, redirect to login page
+            window.location.href = 'login.html';
+        }
+    });
 </script>
 
 </body>
