@@ -82,36 +82,37 @@ function populateUserData(userData) {
 // --- Main Logic ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const userDocRef = doc(db, "users", user.uid);
+    // Check if an admin is viewing a specific user's profile via URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUserId = urlParams.get("id");
+
+    // Determine which user ID to load: the one from the URL or the logged-in user's
+    const userIdToLoad = profileUserId || user.uid;
+    const userDocRef = doc(db, "users", userIdToLoad);
     let userDocSnap = await getDoc(userDocRef);
 
-    if (!userDocSnap.exists()) {
-      console.log(
-        "User document not found. Creating one for existing auth user."
-      );
-      try {
-        const initialData = {
-          email: user.email,
-          name: user.displayName || "",
-          phone: "",
-          address: "",
-          city: "",
-          state: "",
-          zip: "",
-        };
-        await setDoc(userDocRef, initialData);
-        userDocSnap = await getDoc(userDocRef);
-      } catch (error) {
-        console.error("Error creating user document:", error);
+    // If an admin is trying to view a profile, verify they have admin rights
+    if (profileUserId) {
+      const adminDocRef = doc(db, "users", user.uid);
+      const adminDocSnap = await getDoc(adminDocRef);
+      if (!adminDocSnap.exists() || adminDocSnap.data().role !== "admin") {
+        document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this profile.</p><a href="admin.html" class="mt-4 text-blue-500 hover:underline">Back to Admin Panel</a></div>`;
         return;
       }
     }
 
+    if (!userDocSnap.exists()) {
+      // Handle case where user document doesn't exist
+      console.log("User document not found for ID:", userIdToLoad);
+      document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">User Not Found</h1></div>`;
+      return;
+    }
+
     let userData = userDocSnap.data();
     populateUserData(userData);
+    fetchAndDisplayBookings(userData.email);
 
-    fetchAndDisplayBookings(user.email);
-
+    // --- Event Listeners for Edit/Save/Cancel ---
     editProfileButton.addEventListener("click", () => {
       viewModeContent.classList.add("hidden");
       profileForm.classList.remove("hidden");
@@ -125,10 +126,8 @@ onAuthStateChanged(auth, async (user) => {
 
     profileForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       saveProfileButton.disabled = true;
       saveProfileButton.textContent = "Saving...";
-
       const updatedData = {
         name: profileNameInput.value.trim(),
         phone: profilePhoneInput.value.trim(),
@@ -137,10 +136,9 @@ onAuthStateChanged(auth, async (user) => {
         state: profileStateInput.value.trim(),
         zip: profileZipInput.value.trim(),
       };
-
       try {
         await updateDoc(userDocRef, updatedData);
-        userData = { ...userData, ...updatedData }; // Update local data object
+        userData = { ...userData, ...updatedData };
         populateUserData(userData);
         profileForm.classList.add("hidden");
         viewModeContent.classList.remove("hidden");

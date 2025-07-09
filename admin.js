@@ -227,57 +227,27 @@ async function fetchAndDisplayCustomers() {
       const userId = docSnap.id;
       const user = docSnap.data();
       const row = document.createElement("tr");
-      row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
-        user.name || "N/A"
-      }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-        user.email || "N/A"
-      }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
-        user.phone || "N/A"
-      }</td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button class="text-indigo-600 hover:text-indigo-900 edit-customer-button" data-user-id="${userId}">Edit</button></td>`;
+
+      // This new row structure includes the User ID and a direct link for the "Edit" button
+      row.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${
+              user.name || "N/A"
+            }</div>
+            <div class="text-sm text-gray-400">${userId}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+          user.email || "N/A"
+        }</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+          user.phone || "N/A"
+        }</td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <a href="profile.html?id=${userId}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+        </td>
+      `;
       customersTableBody.appendChild(row);
     });
-    document.querySelectorAll(".edit-customer-button").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        const userId = event.target.dataset.userId;
-        const userDoc = await getDoc(doc(db, "users", userId));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          document.getElementById("edit-customer-id").value = userId;
-          document.getElementById("edit-customer-name").value =
-            userData.name || "";
-          document.getElementById("edit-customer-email").value =
-            userData.email || "";
-          document.getElementById("edit-customer-phone").value =
-            userData.phone || "";
-          document
-            .getElementById("edit-customer-modal")
-            .classList.remove("hidden");
-        }
-      });
-    });
-    document
-      .getElementById("edit-customer-form")
-      .addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const userId = document.getElementById("edit-customer-id").value;
-        const name = document.getElementById("edit-customer-name").value;
-        const phone = document.getElementById("edit-customer-phone").value;
-        const userRef = doc(db, "users", userId);
-        try {
-          await updateDoc(userRef, { name, phone });
-          document
-            .getElementById("edit-customer-modal")
-            .classList.add("hidden");
-          loadCustomersView(); // Refresh the list
-        } catch (error) {
-          console.error("Error updating customer: ", error);
-        }
-      });
-    document
-      .getElementById("cancel-edit-customer-button")
-      .addEventListener("click", () => {
-        document.getElementById("edit-customer-modal").classList.add("hidden");
-      });
   } catch (error) {
     console.error("Error fetching customers: ", error);
     customersTableBody.innerHTML =
