@@ -1,6 +1,5 @@
 // admin.js
 
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
   getAuth,
@@ -17,7 +16,6 @@ import {
   getDoc,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
   authDomain: "sweet-africa-bookings.firebaseapp.com",
@@ -27,12 +25,11 @@ const firebaseConfig = {
   appId: "1:950167391030:web:1085602775ce912d220197",
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- HELPER FUNCTION FOR STATUS COLORS ---
+// --- HELPER FUNCTIONS ---
 function getStatusClasses(status) {
   const s = String(status || "").toLowerCase();
   switch (s) {
@@ -49,6 +46,22 @@ function getStatusClasses(status) {
   }
 }
 
+function getStatusColor(status) {
+  const s = String(status || "").toLowerCase();
+  switch (s) {
+    case "pending":
+      return "#fcd34d"; // Yellow
+    case "confirmed":
+      return "#60a5fa"; // Blue
+    case "completed":
+      return "#4ade80"; // Green
+    case "cancelled":
+      return "#f87171"; // Red
+    default:
+      return "#9ca3af"; // Grey
+  }
+}
+
 // --- DOM Elements ---
 const logoutButton = document.getElementById("logout-button");
 const mainContent = document.querySelector("main");
@@ -56,26 +69,24 @@ const adminContentDiv = document.getElementById("admin-content");
 const navBookings = document.getElementById("nav-bookings");
 const navCustomers = document.getElementById("nav-customers");
 
-// --- Main Security Check ---
+// --- MAIN APP LOGIC ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     const userDocRef = doc(db, "users", user.uid);
     const userDocSnap = await getDoc(userDocRef);
     if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
-      mainContent.style.display = "block"; // Show content only for admins
+      mainContent.style.display = "block";
       setupNavigation();
+      initializeAndDisplayCalendar(); // Initialize calendar on load
       loadBookingsView(); // Load the default view
     } else {
-      // If user is not an admin, show access denied message
       document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="index.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
     }
   } else {
-    // If no user is logged in, redirect to the login page
     window.location.href = "login.html";
   }
 });
 
-// --- Navigation Logic ---
 function setupNavigation() {
   navBookings.addEventListener("click", () => {
     setActiveTab(navBookings);
@@ -93,52 +104,53 @@ function setActiveTab(activeButton) {
   activeButton.classList.add("admin-nav-active");
 }
 
-// --- View Loaders ---
-async function loadBookingsView() {
-  adminContentDiv.innerHTML = `
-        <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
-            <table class="min-w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200">
-                    <tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    `;
-  await fetchAndDisplayBookings();
+async function initializeAndDisplayCalendar() {
+  const calendarEl = document.getElementById("booking-calendar");
+  if (!calendarEl) return;
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "bookings")));
+    const events = querySnapshot.docs.map((doc) => {
+      const booking = doc.data();
+      const eventColor = getStatusColor(booking.status);
+      const timeParts = booking.time ? booking.time.split(" ")[0] : "12:00";
+      const dateStr = booking.date; // e.g., "July 10, 2025"
+      // Convert "Month Day, Year" to "YYYY-MM-DD"
+      const isoDate = new Date(dateStr).toISOString().split("T")[0];
+
+      return {
+        title: `${booking.customerName} - ${booking.service}`,
+        start: `${isoDate}T${timeParts}:00`,
+        color: eventColor,
+        borderColor: eventColor,
+      };
+    });
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "dayGridMonth",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,listWeek",
+      },
+      events: events,
+      editable: false,
+    });
+    calendar.render();
+  } catch (error) {
+    console.error("Error fetching bookings for calendar: ", error);
+    calendarEl.innerHTML =
+      '<p class="text-red-500 text-center">Error loading calendar events.</p>';
+  }
 }
 
+async function loadBookingsView() {
+  adminContentDiv.innerHTML = `<div class="bg-white shadow-lg rounded-2xl overflow-hidden"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200"><tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr></tbody></table></div>`;
+  await fetchAndDisplayBookings();
+}
 async function loadCustomersView() {
-  adminContentDiv.innerHTML = `
-        <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
-            <table class="min-w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="customers-table-body" class="bg-white divide-y divide-gray-200">
-                    <tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading customers...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    `;
+  adminContentDiv.innerHTML = `<div class="bg-white shadow-lg rounded-2xl overflow-hidden"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="customers-table-body" class="bg-white divide-y divide-gray-200"><tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading customers...</td></tr></tbody></table></div>`;
   await fetchAndDisplayCustomers();
 }
 
-// --- Data Fetching & Display ---
 async function fetchAndDisplayBookings() {
   const bookingsTableBody = document.getElementById("bookings-table-body");
   try {
@@ -188,6 +200,7 @@ async function fetchAndDisplayBookings() {
           badge.className = `status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
             newStatus
           )}`;
+          initializeAndDisplayCalendar(); // Refresh calendar on status change
         }
         event.target.disabled = false;
       });
@@ -240,7 +253,6 @@ async function updateBookingStatus(bookingId, newStatus) {
   }
 }
 
-// --- Logout Logic ---
 logoutButton.addEventListener("click", () => {
   signOut(auth).catch((error) => console.error("Logout Error:", error));
 });

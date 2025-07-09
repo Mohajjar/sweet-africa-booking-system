@@ -6,6 +6,9 @@
     <title>Admin Dashboard - Sweet Africa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    
     <style>
         body { font-family: 'Poppins', sans-serif; }
         .admin-nav-active {
@@ -13,29 +16,27 @@
             color: #3b82f6;
         }
         #booking-calendar {
-        max-width: 1100px;
-        margin: 20px auto;
-        padding: 0 10px;
-    }
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 0 10px;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
 
-    <!-- New Admin Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                  <div class="flex items-center space-x-2">
                     <span class="font-bold text-xl text-gray-800">Admin Panel</span>
-                    <span class="bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded-full">Sweet Africa Golbal</span>
+                    <span class="bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded-full">Sweet Africa</span>
                 </div>
                 <button id="logout-button" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition">Log Out</button>
             </div>
         </div>
     </header>
 
-    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
-        <!-- Navigation Menu -->
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8" style="display: none;">
         <nav class="flex border-b border-gray-200 mb-6">
             <button id="nav-bookings" class="admin-nav-active py-4 px-6 font-semibold text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
                 Bookings
@@ -44,11 +45,10 @@
                 Customers
             </button>
         </nav>
-
+        
         <div id="booking-calendar"></div>
         
-        <!-- Content will be loaded here -->
-        <div id="admin-content">
+        <div id="admin-content" class="mt-6">
             <p class="text-center text-gray-500">Loading...</p>
         </div>
     </main>
