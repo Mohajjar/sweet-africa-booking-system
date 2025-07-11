@@ -31,6 +31,23 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// --- HELPER FUNCTION FOR STATUS COLORS ---
+function getStatusClasses(status) {
+  const s = String(status || "").toLowerCase();
+  switch (s) {
+    case "pending":
+      return "bg-yellow-200 text-yellow-800";
+    case "confirmed":
+      return "bg-blue-200 text-blue-800";
+    case "completed":
+      return "bg-green-200 text-green-800";
+    case "cancelled":
+      return "bg-red-200 text-red-800";
+    default:
+      return "bg-gray-200 text-gray-800";
+  }
+}
+
 // --- DOM Elements ---
 const viewModeContent = document.getElementById("view-mode-content");
 const profileForm = document.getElementById("profile-form");
@@ -79,35 +96,15 @@ function populateUserData(userData) {
   profileZipInput.value = userData.zip || "";
 }
 
-function getStatusClasses(status) {
-  const s = String(status || "").toLowerCase();
-  switch (s) {
-    case "pending":
-      return "bg-yellow-200 text-yellow-800";
-    case "confirmed":
-      return "bg-blue-200 text-blue-800";
-    case "completed":
-      return "bg-green-200 text-green-800";
-    case "cancelled":
-      return "bg-red-200 text-red-800";
-    default:
-      return "bg-gray-200 text-gray-800";
-  }
-}
-
 // --- Main Logic ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    // Check if an admin is viewing a specific user's profile via URL parameter
     const urlParams = new URLSearchParams(window.location.search);
     const profileUserId = urlParams.get("id");
-
-    // Determine which user ID to load: the one from the URL or the logged-in user's
     const userIdToLoad = profileUserId || user.uid;
     const userDocRef = doc(db, "users", userIdToLoad);
     let userDocSnap = await getDoc(userDocRef);
 
-    // If an admin is trying to view a profile, verify they have admin rights
     if (profileUserId) {
       const adminDocRef = doc(db, "users", user.uid);
       const adminDocSnap = await getDoc(adminDocRef);
@@ -115,7 +112,6 @@ onAuthStateChanged(auth, async (user) => {
         document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this profile.</p><a href="admin.html" class="mt-4 text-blue-500 hover:underline">Back to Admin Panel</a></div>`;
         return;
       }
-      // If an admin is viewing a profile, add a "Back to Admin" button
       const navContainer = document.querySelector(
         "header nav .flex.items-center.space-x-2"
       );
@@ -125,15 +121,13 @@ onAuthStateChanged(auth, async (user) => {
         adminButton.className =
           "bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition";
         adminButton.textContent = "Back to Admin";
-        // Replace the "My Account" button with this one
-        navContainer.innerHTML = ""; // Clear existing buttons
+        navContainer.innerHTML = "";
         navContainer.appendChild(adminButton);
-        navContainer.appendChild(logoutButton); // Re-add the logout button
+        navContainer.appendChild(logoutButton);
       }
     }
 
     if (!userDocSnap.exists()) {
-      // Handle case where user document doesn't exist
       console.log("User document not found for ID:", userIdToLoad);
       document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">User Not Found</h1></div>`;
       return;
@@ -143,14 +137,13 @@ onAuthStateChanged(auth, async (user) => {
     populateUserData(userData);
     fetchAndDisplayBookings(userData.email);
 
-    // --- Event Listeners for Edit/Save/Cancel ---
     editProfileButton.addEventListener("click", () => {
       viewModeContent.classList.add("hidden");
       profileForm.classList.remove("hidden");
     });
 
     cancelEditButton.addEventListener("click", () => {
-      populateUserData(userData); // Reset form to original data
+      populateUserData(userData);
       profileForm.classList.add("hidden");
       viewModeContent.classList.remove("hidden");
     });
@@ -206,6 +199,10 @@ async function fetchAndDisplayBookings(userEmail) {
     const booking = doc.data();
     const bookingElement = document.createElement("div");
     bookingElement.className = "border-b border-gray-200 py-4";
+
+    // Use the helper function to get the correct CSS classes
+    const statusClasses = getStatusClasses(booking.status);
+
     bookingElement.innerHTML = `
             <div class="flex justify-between items-center">
                 <div>
@@ -218,11 +215,9 @@ async function fetchAndDisplayBookings(userEmail) {
                      <p class="font-semibold text-md">$${booking.totalPrice.toFixed(
                        2
                      )}</p>
-                     <p class="px-3 py-1 text-xs font-semibold rounded-full ${
-                       booking.status === "Pending"
-                         ? "bg-yellow-200 text-yellow-800"
-                         : "bg-green-200 text-green-800"
-                     }">${booking.status}</p>
+                     <p class="px-3 py-1 text-xs font-semibold rounded-full ${statusClasses}">${
+      booking.status
+    }</p>
                 </div>
             </div>
         `;
