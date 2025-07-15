@@ -16,6 +16,7 @@ import {
   getDoc,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
   authDomain: "sweet-africa-bookings.firebaseapp.com",
@@ -25,6 +26,7 @@ const firebaseConfig = {
   appId: "1:950167391030:web:1085602775ce912d220197",
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -50,15 +52,15 @@ function getStatusColor(status) {
   const s = String(status || "").toLowerCase();
   switch (s) {
     case "pending":
-      return "#facc15";
+      return "#facc15"; // Yellow
     case "confirmed":
-      return "#60a5fa";
+      return "#60a5fa"; // Blue
     case "completed":
-      return "#4ade80";
+      return "#4ade80"; // Green
     case "cancelled":
-      return "#f87171";
+      return "#f87171"; // Red
     default:
-      return "#9ca3af";
+      return "#9ca3af"; // Grey
   }
 }
 
@@ -69,6 +71,7 @@ const adminContentDiv = document.getElementById("admin-content");
 const navBookings = document.getElementById("nav-bookings");
 const navCustomers = document.getElementById("nav-customers");
 const navCalendar = document.getElementById("nav-calendar");
+const navFinance = document.getElementById("nav-finance");
 
 // --- MAIN APP LOGIC ---
 onAuthStateChanged(auth, async (user) => {
@@ -78,7 +81,7 @@ onAuthStateChanged(auth, async (user) => {
     if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
       mainContent.style.display = "block";
       setupNavigation();
-      loadBookingsView(); // Default view on page load
+      loadBookingsView(); // Load the default view
     } else {
       document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="index.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
     }
@@ -101,12 +104,17 @@ function setupNavigation() {
     setActiveTab(navCalendar);
     loadCalendarView();
   });
+  navFinance.addEventListener("click", () => {
+    setActiveTab(navFinance);
+    loadFinanceView();
+  });
 }
 
 function setActiveTab(activeButton) {
   navBookings.classList.remove("admin-nav-active");
   navCustomers.classList.remove("admin-nav-active");
   navCalendar.classList.remove("admin-nav-active");
+  navFinance.classList.remove("admin-nav-active");
   activeButton.classList.add("admin-nav-active");
 }
 
@@ -124,6 +132,18 @@ async function loadCustomersView() {
 async function loadCalendarView() {
   adminContentDiv.innerHTML = `<div id="booking-calendar"></div>`;
   await initializeAndDisplayCalendar();
+}
+
+async function loadFinanceView() {
+  adminContentDiv.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Total Revenue</h3><p id="kpi-total-revenue" class="text-3xl font-bold text-gray-800 mt-1">$0.00</p><p class="text-xs text-gray-400">From all completed bookings.</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Projected Revenue</h3><p id="kpi-projected-revenue" class="text-3xl font-bold text-gray-800 mt-1">$0.00</p><p class="text-xs text-gray-400">From pending & confirmed bookings.</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Average Booking Value</h3><p id="kpi-avg-booking" class="text-3xl font-bold text-gray-800 mt-1">$0.00</p><p class="text-xs text-gray-400">Across all non-cancelled bookings.</p></div>
+        </div>
+        <p class="text-center text-gray-500">Full financial report and charts coming soon.</p>
+    `;
+  await calculateAndDisplayFinance();
 }
 
 // --- Data Fetching & Display ---
@@ -153,6 +173,7 @@ async function initializeAndDisplayCalendar() {
         right: "dayGridMonth,timeGridWeek,listWeek",
       },
       events: events,
+      editable: false,
     });
     calendar.render();
   } catch (error) {
@@ -166,40 +187,26 @@ async function fetchAndDisplayBookings() {
   const bookingsTableBody = document.getElementById("bookings-table-body");
   try {
     const querySnapshot = await getDocs(query(collection(db, "bookings")));
-
-    // Convert the booking documents to a standard array
     const bookings = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
-
-    // --- NEW SORTING LOGIC ---
-    // This will sort the array to put "Pending" statuses first.
     bookings.sort((a, b) => {
-      if (a.status === "Pending" && b.status !== "Pending") {
-        return -1; // a comes first
-      }
-      if (a.status !== "Pending" && b.status === "Pending") {
-        return 1; // b comes first
-      }
-      return 0; // Keep original order for other statuses
+      if (a.status === "Pending" && b.status !== "Pending") return -1;
+      if (a.status !== "Pending" && b.status === "Pending") return 1;
+      return 0;
     });
-    // --- END OF SORTING LOGIC ---
 
-    bookingsTableBody.innerHTML = ""; // Clear the loading message
+    bookingsTableBody.innerHTML = "";
     if (bookings.length === 0) {
       bookingsTableBody.innerHTML =
         '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No customer bookings found.</td></tr>';
       return;
     }
-
-    // Now, loop through the SORTED bookings array to build the table
     bookings.forEach((bookingData) => {
-      const bookingId = bookingData.id;
-      const booking = bookingData; // The object now includes all data + id
+      const { id: bookingId, ...booking } = bookingData;
       const row = document.createElement("tr");
       row.id = `booking-row-${bookingId}`;
-
       const statusClasses = getStatusClasses(booking.status);
       const statusBadge = `<span class="status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses}">${
         booking.status || "N/A"
@@ -217,12 +224,10 @@ async function fetchAndDisplayBookings() {
       }>Completed</option><option value="Cancelled" ${
         booking.status === "Cancelled" ? "selected" : ""
       }>Cancelled</option></select>`;
-
       row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${booking.customerName}</div><div class="text-sm text-gray-500">${booking.customerEmail}</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.service}</div><div class="text-sm text-gray-500">${booking.bedrooms} bed, ${booking.bathrooms} bath</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.date}</div><div class="text-sm text-gray-500">${booking.time}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${statusBadge}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formattedPrice}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsDropdown}</td>`;
       bookingsTableBody.appendChild(row);
     });
 
-    // Re-attach event listeners after rendering
     document.querySelectorAll(".status-select").forEach((selectElement) => {
       selectElement.addEventListener("change", async (event) => {
         const newStatus = event.target.value;
@@ -244,7 +249,7 @@ async function fetchAndDisplayBookings() {
   } catch (error) {
     console.error("Error fetching bookings: ", error);
     bookingsTableBody.innerHTML =
-      '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Error loading bookings. Please check permissions and console.</td></tr>';
+      '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Error loading bookings.</td></tr>';
   }
 }
 
@@ -286,6 +291,41 @@ async function updateBookingStatus(bookingId, newStatus) {
   } catch (error) {
     console.error("Error updating booking status: ", error);
     return false;
+  }
+}
+
+async function calculateAndDisplayFinance() {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "bookings")));
+    let totalRevenue = 0,
+      projectedRevenue = 0,
+      validBookingsCount = 0,
+      totalBookingValue = 0;
+    querySnapshot.forEach((doc) => {
+      const booking = doc.data();
+      const price = booking.totalPrice || 0;
+      if (booking.status === "Completed") totalRevenue += price;
+      if (booking.status === "Pending" || booking.status === "Confirmed")
+        projectedRevenue += price;
+      if (booking.status !== "Cancelled") {
+        validBookingsCount++;
+        totalBookingValue += price;
+      }
+    });
+    const avgBookingValue =
+      validBookingsCount > 0 ? totalBookingValue / validBookingsCount : 0;
+    document.getElementById(
+      "kpi-total-revenue"
+    ).textContent = `$${totalRevenue.toFixed(2)}`;
+    document.getElementById(
+      "kpi-projected-revenue"
+    ).textContent = `$${projectedRevenue.toFixed(2)}`;
+    document.getElementById(
+      "kpi-avg-booking"
+    ).textContent = `$${avgBookingValue.toFixed(2)}`;
+  } catch (error) {
+    console.error("Error calculating finances: ", error);
+    adminContentDiv.innerHTML = `<p class="text-red-500 text-center">Error loading financial data.</p>`;
   }
 }
 
