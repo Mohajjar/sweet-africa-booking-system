@@ -1,5 +1,3 @@
-// admin.js
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
   getAuth,
@@ -16,7 +14,7 @@ import {
   getDoc,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Your web app's Firebase configuration
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
   authDomain: "sweet-africa-bookings.firebaseapp.com",
@@ -26,7 +24,6 @@ const firebaseConfig = {
   appId: "1:950167391030:web:1085602775ce912d220197",
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -47,20 +44,19 @@ function getStatusClasses(status) {
       return "bg-gray-100 text-gray-800";
   }
 }
-
 function getStatusColor(status) {
   const s = String(status || "").toLowerCase();
   switch (s) {
     case "pending":
-      return "#facc15"; // Yellow
+      return "#facc15";
     case "confirmed":
-      return "#60a5fa"; // Blue
+      return "#60a5fa";
     case "completed":
-      return "#4ade80"; // Green
+      return "#4ade80";
     case "cancelled":
-      return "#f87171"; // Red
+      return "#f87171";
     default:
-      return "#9ca3af"; // Grey
+      return "#9ca3af";
   }
 }
 
@@ -81,7 +77,7 @@ onAuthStateChanged(auth, async (user) => {
     if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
       mainContent.style.display = "block";
       setupNavigation();
-      loadBookingsView(); // Load the default view
+      loadBookingsView();
     } else {
       document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="index.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
     }
@@ -90,7 +86,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- Navigation Logic ---
+// --- Navigation ---
 function setupNavigation() {
   navBookings.addEventListener("click", () => {
     setActiveTab(navBookings);
@@ -111,10 +107,9 @@ function setupNavigation() {
 }
 
 function setActiveTab(activeButton) {
-  navBookings.classList.remove("admin-nav-active");
-  navCustomers.classList.remove("admin-nav-active");
-  navCalendar.classList.remove("admin-nav-active");
-  navFinance.classList.remove("admin-nav-active");
+  [navBookings, navCustomers, navCalendar, navFinance].forEach((button) =>
+    button.classList.remove("admin-nav-active")
+  );
   activeButton.classList.add("admin-nav-active");
 }
 
@@ -137,16 +132,101 @@ async function loadCalendarView() {
 async function loadFinanceView() {
   adminContentDiv.innerHTML = `
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Total Revenue</h3><p id="kpi-total-revenue" class="text-3xl font-bold text-gray-800 mt-1">$0.00</p><p class="text-xs text-gray-400">From all completed bookings.</p></div>
-            <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Projected Revenue</h3><p id="kpi-projected-revenue" class="text-3xl font-bold text-gray-800 mt-1">$0.00</p><p class="text-xs text-gray-400">From pending & confirmed bookings.</p></div>
-            <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Average Booking Value</h3><p id="kpi-avg-booking" class="text-3xl font-bold text-gray-800 mt-1">$0.00</p><p class="text-xs text-gray-400">Across all non-cancelled bookings.</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Total Revenue</h3><p id="kpi-total-revenue" class="text-3xl font-bold text-gray-800 mt-1">$0.00</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Projected Revenue</h3><p id="kpi-projected-revenue" class="text-3xl font-bold text-gray-800 mt-1">$0.00</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Average Booking Value</h3><p id="kpi-avg-booking" class="text-3xl font-bold text-gray-800 mt-1">$0.00</p></div>
         </div>
-        <p class="text-center text-gray-500">Full financial report and charts coming soon.</p>
-    `;
-  await calculateAndDisplayFinance();
+        <div class="mb-6"><label for="date-range-filter" class="font-semibold text-gray-700">Filter by Date Range:</label><input type="text" id="date-range-filter" placeholder="Select a date range..." class="mt-1 block w-full md:w-80 border-gray-300 rounded-md shadow-sm"></div>
+        <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
+            <table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th></tr></thead><tbody id="finance-table-body" class="bg-white divide-y divide-gray-200"></tbody></table>
+        </div>`;
+
+  const allBookings = await fetchAllBookings();
+  flatpickr("#date-range-filter", {
+    mode: "range",
+    dateFormat: "Y-m-d",
+    onChange: function (selectedDates) {
+      if (selectedDates.length === 2) {
+        calculateAndDisplayFinance(
+          allBookings,
+          selectedDates[0],
+          selectedDates[1]
+        );
+      }
+    },
+  });
+  calculateAndDisplayFinance(allBookings);
 }
 
-// --- Data Fetching & Display ---
+// --- Data Fetching & Logic ---
+async function fetchAllBookings() {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "bookings")));
+    return querySnapshot.docs.map((doc) => doc.data());
+  } catch (error) {
+    console.error("Error fetching all bookings: ", error);
+    return [];
+  }
+}
+
+async function calculateAndDisplayFinance(allBookings, startDate, endDate) {
+  let filteredBookings = allBookings;
+  if (startDate && endDate) {
+    filteredBookings = allBookings.filter((booking) => {
+      const bookingDate = new Date(booking.date);
+      return bookingDate >= startDate && bookingDate <= endDate;
+    });
+  }
+  let totalRevenue = 0,
+    projectedRevenue = 0,
+    validBookingsCount = 0,
+    totalBookingValue = 0;
+  filteredBookings.forEach((booking) => {
+    const price = booking.totalPrice || 0;
+    if (booking.status === "Completed") totalRevenue += price;
+    if (booking.status === "Pending" || booking.status === "Confirmed")
+      projectedRevenue += price;
+    if (booking.status !== "Cancelled") {
+      validBookingsCount++;
+      totalBookingValue += price;
+    }
+  });
+  const avgBookingValue =
+    validBookingsCount > 0 ? totalBookingValue / validBookingsCount : 0;
+  document.getElementById(
+    "kpi-total-revenue"
+  ).textContent = `$${totalRevenue.toFixed(2)}`;
+  document.getElementById(
+    "kpi-projected-revenue"
+  ).textContent = `$${projectedRevenue.toFixed(2)}`;
+  document.getElementById(
+    "kpi-avg-booking"
+  ).textContent = `$${avgBookingValue.toFixed(2)}`;
+  const financeTableBody = document.getElementById("finance-table-body");
+  financeTableBody.innerHTML = "";
+  if (filteredBookings.length === 0) {
+    financeTableBody.innerHTML =
+      '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No transactions found for this period.</td></tr>';
+    return;
+  }
+  filteredBookings.forEach((booking) => {
+    const row = document.createElement("tr");
+    const statusClasses = getStatusClasses(booking.status);
+    row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+      booking.date
+    }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+      booking.customerName
+    }</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+      booking.service
+    }</td><td class="px-6 py-4 whitespace-nowrap"><span class="status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses}">${
+      booking.status
+    }</span></td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">$${(
+      booking.totalPrice || 0
+    ).toFixed(2)}</td>`;
+    financeTableBody.appendChild(row);
+  });
+}
+
 async function initializeAndDisplayCalendar() {
   const calendarEl = document.getElementById("booking-calendar");
   if (!calendarEl) return;
@@ -196,7 +276,6 @@ async function fetchAndDisplayBookings() {
       if (a.status !== "Pending" && b.status === "Pending") return 1;
       return 0;
     });
-
     bookingsTableBody.innerHTML = "";
     if (bookings.length === 0) {
       bookingsTableBody.innerHTML =
@@ -294,42 +373,7 @@ async function updateBookingStatus(bookingId, newStatus) {
   }
 }
 
-async function calculateAndDisplayFinance() {
-  try {
-    const querySnapshot = await getDocs(query(collection(db, "bookings")));
-    let totalRevenue = 0,
-      projectedRevenue = 0,
-      validBookingsCount = 0,
-      totalBookingValue = 0;
-    querySnapshot.forEach((doc) => {
-      const booking = doc.data();
-      const price = booking.totalPrice || 0;
-      if (booking.status === "Completed") totalRevenue += price;
-      if (booking.status === "Pending" || booking.status === "Confirmed")
-        projectedRevenue += price;
-      if (booking.status !== "Cancelled") {
-        validBookingsCount++;
-        totalBookingValue += price;
-      }
-    });
-    const avgBookingValue =
-      validBookingsCount > 0 ? totalBookingValue / validBookingsCount : 0;
-    document.getElementById(
-      "kpi-total-revenue"
-    ).textContent = `$${totalRevenue.toFixed(2)}`;
-    document.getElementById(
-      "kpi-projected-revenue"
-    ).textContent = `$${projectedRevenue.toFixed(2)}`;
-    document.getElementById(
-      "kpi-avg-booking"
-    ).textContent = `$${avgBookingValue.toFixed(2)}`;
-  } catch (error) {
-    console.error("Error calculating finances: ", error);
-    adminContentDiv.innerHTML = `<p class="text-red-500 text-center">Error loading financial data.</p>`;
-  }
-}
-
-// --- Logout Logic ---
+// --- Logout ---
 logoutButton.addEventListener("click", () => {
   signOut(auth).catch((error) => console.error("Logout Error:", error));
 });
