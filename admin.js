@@ -78,6 +78,7 @@ onAuthStateChanged(auth, async (user) => {
       mainContent.style.display = "block";
       setupNavigation();
       loadBookingsView();
+      setupAddNewBooking();
     } else {
       document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="index.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
     }
@@ -371,6 +372,66 @@ async function updateBookingStatus(bookingId, newStatus) {
     console.error("Error updating booking status: ", error);
     return false;
   }
+}
+
+// --- ADD NEW BOOKING MODAL LOGIC ---
+function setupAddNewBooking() {
+  const modal = document.getElementById("add-booking-modal");
+  const openModalBtn = document.getElementById("add-new-booking-btn");
+  const closeModalBtn = document.getElementById("cancel-add-booking-btn");
+  const addBookingForm = document.getElementById("add-booking-form");
+
+  // Use Flatpickr for the date input in the modal
+  flatpickr("#new-booking-date", {
+    minDate: "today",
+    dateFormat: "F j, Y",
+  });
+
+  // Show the modal when the "+ New Booking" button is clicked
+  openModalBtn.addEventListener("click", () => {
+    modal.classList.remove("hidden");
+  });
+
+  // Hide the modal when the "Cancel" button is clicked
+  closeModalBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+  });
+
+  // Handle the form submission
+  addBookingForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // Collect all the data from the form
+    const newBookingData = {
+      customerName: document.getElementById("new-booking-name").value,
+      customerEmail: document.getElementById("new-booking-email").value,
+      service: document.getElementById("new-booking-service").value,
+      bedrooms: parseInt(document.getElementById("new-booking-bedrooms").value),
+      bathrooms: parseInt(
+        document.getElementById("new-booking-bathrooms").value
+      ),
+      date: document.getElementById("new-booking-date").value,
+      time: document.getElementById("new-booking-time").value,
+      totalPrice: parseFloat(
+        document.getElementById("new-booking-price").value
+      ),
+      status: "Confirmed", // Default status for admin-added bookings
+    };
+
+    try {
+      // Add a new document to the "bookings" collection in Firestore
+      await addDoc(collection(db, "bookings"), newBookingData);
+      modal.classList.add("hidden"); // Hide the modal on success
+      addBookingForm.reset(); // Clear the form
+
+      // Refresh both the table and calendar to show the new booking
+      loadBookingsView();
+      initializeAndDisplayCalendar();
+    } catch (error) {
+      console.error("Error adding new booking: ", error);
+      alert("Failed to add booking. Please check the console for errors.");
+    }
+  });
 }
 
 // --- Logout ---
