@@ -381,6 +381,7 @@ function setupAddNewBooking() {
   const openModalBtn = document.getElementById("add-new-booking-btn");
   const closeModalBtn = document.getElementById("cancel-add-booking-btn");
   const addBookingForm = document.getElementById("add-booking-form");
+  const priceInput = document.getElementById("new-booking-price"); // Get price input
 
   // Use Flatpickr for the date input in the modal
   flatpickr("#new-booking-date", {
@@ -388,21 +389,26 @@ function setupAddNewBooking() {
     dateFormat: "F j, Y",
   });
 
-  // Show the modal when the "+ New Booking" button is clicked
   openModalBtn.addEventListener("click", () => {
     modal.classList.remove("hidden");
   });
 
-  // Hide the modal when the "Cancel" button is clicked
   closeModalBtn.addEventListener("click", () => {
     modal.classList.add("hidden");
   });
 
-  // Handle the form submission
+  // NEW: Add formatter for the price input
+  priceInput.addEventListener("blur", (e) => {
+    // 'blur' means when the user clicks away
+    const value = parseFloat(e.target.value.replace(/[^0-9.]/g, ""));
+    if (!isNaN(value)) {
+      e.target.value = `$${value.toFixed(2)}`;
+    }
+  });
+
   addBookingForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Collect all the data from the form
     const newBookingData = {
       customerName: document.getElementById("new-booking-name").value,
       customerEmail: document.getElementById("new-booking-email").value,
@@ -412,22 +418,24 @@ function setupAddNewBooking() {
         document.getElementById("new-booking-bathrooms").value
       ),
       date: document.getElementById("new-booking-date").value,
-      time: document.getElementById("new-booking-time").value,
-      totalPrice: parseFloat(
-        document.getElementById("new-booking-price").value
-      ),
-      status: "Confirmed", // Default status for admin-added bookings
+      time: document.getElementById("new-booking-time").value, // Now gets value from select
+      totalPrice: parseFloat(priceInput.value.replace(/[^0-9.]/g, "")), // Clean and parse the price
+      status: "Confirmed",
+      notes: document.getElementById("new-booking-notes").value, // NEW: Get notes value
     };
 
     try {
-      // Add a new document to the "bookings" collection in Firestore
       await addDoc(collection(db, "bookings"), newBookingData);
-      modal.classList.add("hidden"); // Hide the modal on success
-      addBookingForm.reset(); // Clear the form
+      modal.classList.add("hidden");
+      addBookingForm.reset();
 
-      // Refresh both the table and calendar to show the new booking
+      // Refresh views to show the new booking
       loadBookingsView();
-      initializeAndDisplayCalendar();
+      // Also refresh calendar if it's the active view
+      const calendarTab = document.getElementById("nav-calendar");
+      if (calendarTab.classList.contains("admin-nav-active")) {
+        loadCalendarView();
+      }
     } catch (error) {
       console.error("Error adding new booking: ", error);
       alert("Failed to add booking. Please check the console for errors.");
