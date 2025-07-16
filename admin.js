@@ -12,6 +12,7 @@ import {
   doc,
   updateDoc,
   getDoc,
+  addDoc,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- Firebase Config ---
