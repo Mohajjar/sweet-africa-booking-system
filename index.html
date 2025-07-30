@@ -19,6 +19,9 @@
         <div class="logo">
             <a href="index.html">Sweet Africa Global LLC</a>
         </div>
+        <button id="mobile-menu-btn" aria-label="Open Menu">
+            <i class="fas fa-bars"></i>
+        </button>
         <div class="nav-links">
             <a href="profile.html">My Account</a>
             <button id="logout-button">Log Out</button>
@@ -273,20 +276,28 @@
         }
 
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const userDocRef = doc(db, "users", user.uid);
-                const userDocSnap = await getDoc(userDocRef);
-                if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    bookingState.customerName = userData.name || '';
-                    bookingState.customerEmail = userData.email || '';
-                }
-                document.getElementById('logout-button').addEventListener('click', () => signOut(auth));
-                await loadAllComponents();
-            } else {
-                window.location.href = 'login.html';
-            }
+    if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            bookingState.customerName = userData.name || '';
+            bookingState.customerEmail = userData.email || '';
+        }
+        document.getElementById('logout-button').addEventListener('click', () => signOut(auth));
+
+        // --- Mobile Menu Toggle Logic ---
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const nav = document.querySelector('nav');
+        mobileMenuBtn.addEventListener('click', () => {
+            nav.classList.toggle('nav-open');
         });
+
+        await loadAllComponents();
+    } else {
+        window.location.href = 'login.html';
+    }
+});
     </script>
 </body>
 </html>

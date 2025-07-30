@@ -1,3 +1,10 @@
+/* Universal Box-Sizing Rule */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
   font-family: 'Poppins', sans-serif;
   background-color: #f8f9fa;
@@ -5,72 +12,81 @@ body {
 }
 
 /* --- Header & Navigation Bar Styles --- */
-
 header {
     background-color: #ffffff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     position: sticky;
     top: 0;
-    z-index: 50;
+    z-index: 100; /* Increased z-index for the header */
 }
 
 header nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 64px; /* 4rem */
-    max-width: 1280px; /* 7xl */
+    height: 64px;
+    max-width: 1280px;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding: 0 1rem;
+    position: relative; /* Needed for positioning the mobile menu */
 }
 
 header .logo a {
-    font-size: 1.25rem; /* xl */
+    font-size: 1.25rem;
     font-weight: 700;
-    color: #1f2937; /* gray-800 */
+    color: #1f2937;
     text-decoration: none;
     transition: color 0.2s;
 }
 header .logo a:hover {
-    color: #3b82f6; /* blue-500 */
+    color: #3b82f6;
 }
 
 header .nav-links {
     display: flex;
     align-items: center;
-    gap: 1rem; /* space-x-4 */
+    gap: 1rem;
 }
 
 header .nav-links a {
-    color: #4b5563; /* gray-600 */
+    color: #4b5563;
     padding: 8px 12px;
     border-radius: 6px;
-    font-size: 0.875rem; /* sm */
+    font-size: 0.875rem;
     font-weight: 500;
     text-decoration: none;
     transition: color 0.2s, background-color 0.2s;
 }
 header .nav-links a:hover {
-    color: #1d4ed8; /* blue-700 */
-    background-color: #eff6ff; /* blue-50 */
+    color: #1d4ed8;
+    background-color: #eff6ff;
 }
 
 #logout-button {
-    background-color: #ef4444; /* red-500 */
+    background-color: #ef4444;
     color: white;
     padding: 8px 16px;
     border-radius: 6px;
-    font-size: 0.875rem; /* sm */
+    font-size: 0.875rem;
     font-weight: 500;
     border: none;
     cursor: pointer;
     transition: background-color 0.2s;
 }
-
 #logout-button:hover {
-    background-color: #dc2626; /* red-600 */
+    background-color: #dc2626;
+}
+
+/* --- Mobile Menu Button (Hamburger) --- */
+#mobile-menu-btn {
+    display: none; /* Hidden by default on desktop */
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #1f2937;
+    cursor: pointer;
+    z-index: 110; /* Ensures it's above other nav content */
 }
 
 .main-container {
@@ -95,7 +111,125 @@ header .nav-links a:hover {
 .booking-container { flex: 2; }
 .summary-container { flex: 1; position: sticky; top: 104px; }
 
+
+/* =================================== */
+/* === MOBILE RESPONSIVENESS RULES === */
+/* =================================== */
+
 @media (max-width: 992px) {
-  .page-wrapper { flex-direction: column; align-items: stretch; }
-  .summary-container { position: static; }
+    /* --- Show Hamburger, Hide Desktop Links --- */
+    #mobile-menu-btn {
+        display: block;
+    }
+    
+    .nav-links {
+        /* Transform the links container into a hidden mobile menu */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(5px);
+        
+        /* Layout for the links inside the mobile menu */
+        flex-direction: column;
+        justify-content: flex-start; /* Align items to the top */
+        align-items: stretch; /* Make items stretch full-width */
+        padding-top: 80px; /* Add space for the header */
+        gap: 0; /* Use borders for separation instead of gap */
+
+        /* Hide it off-screen by default */
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    /* --- State for when the mobile menu is open --- */
+    nav.nav-open .nav-links {
+        transform: translateX(0); /* Slide the menu into view */
+    }
+
+    /* Change hamburger icon to an 'X' when menu is open */
+    nav.nav-open #mobile-menu-btn i::before {
+        content: '\f00d'; /* Font Awesome 'times' (X) icon */
+    }
+
+    /* Make links bigger for easier tapping on mobile */
+    .nav-links a, 
+    .nav-links #logout-button {
+        font-size: 1.25rem;
+        text-align: center;
+        padding: 20px;
+        border-radius: 0;
+        width: 100%;
+        border-bottom: 1px solid #e2e8f0; /* Add a separator line */
+    }
+    
+    /* --- Style Logout as a Link on Mobile --- */
+    .nav-links #logout-button {
+        background-color: transparent;
+        color: #ef4444; /* Use the red color for the text */
+        border: none;
+    }
+
+    .nav-links a:hover {
+        background-color: #f0f5ff; /* Lighter hover for mobile */
+    }
+
+    .nav-links #logout-button:hover {
+        background-color: #fef2f2; /* A light red for hover */
+    }
+
+    /* Add a top border to the first item */
+    .nav-links a:first-child,
+    .nav-links button:first-child {
+        border-top: 1px solid #e2e8f0;
+    }
+
+    /* --- Main Page Layout --- */
+    .page-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .summary-container {
+        position: static;
+        margin-top: 30px;
+    }
+
+    /* --- Reduce Padding on Mobile --- */
+    .booking-container, .summary-container {
+        padding: 30px 20px;
+    }
+
+    /* --- Stack Input Rows (Bedrooms/Bathrooms, Expiry/CVC) --- */
+    .input-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    /* --- Fix Payment Options Layout --- */
+    .payment-method-options {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .payment-method-options .radio-group {
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .payment-method-options .radio-group label {
+        flex-grow: 0;
+        margin-right: 15px;
+    }
+
+    /* --- Adjust Font Sizes for Readability --- */
+    h1 {
+        font-size: 28px;
+    }
+
+    .section-title {
+        font-size: 20px;
+    }
 }
