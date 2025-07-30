@@ -2,111 +2,100 @@ body {
   font-family: 'Poppins', sans-serif;
   background-color: #f8f9fa;
   margin: 0;
-  padding: 0; /* Remove default padding */
 }
 
-/* This is the new container for our main content */
+/* --- Header & Navigation Bar Styles --- */
+
+header {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+header nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px; /* 4rem */
+    max-width: 1280px; /* 7xl */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+header .logo a {
+    font-size: 1.25rem; /* xl */
+    font-weight: 700;
+    color: #1f2937; /* gray-800 */
+    text-decoration: none;
+    transition: color 0.2s;
+}
+header .logo a:hover {
+    color: #3b82f6; /* blue-500 */
+}
+
+header .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* space-x-4 */
+}
+
+header .nav-links a {
+    color: #4b5563; /* gray-600 */
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem; /* sm */
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s, background-color 0.2s;
+}
+header .nav-links a:hover {
+    color: #1d4ed8; /* blue-700 */
+    background-color: #eff6ff; /* blue-50 */
+}
+
+#logout-button {
+    background-color: #ef4444; /* red-500 */
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem; /* sm */
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#logout-button:hover {
+    background-color: #dc2626; /* red-600 */
+}
+
 .main-container {
     display: flex;
-    flex-direction: column; /* Stack items vertically by default */
-    align-items: center;
-    padding: 20px 15px; /* Add padding for mobile */
-    width: 100%;
-    box-sizing: border-box;
+    justify-content: center;
+    padding: 40px 15px;
 }
-
 .page-wrapper {
   display: flex;
-  flex-direction: column; /* On mobile, stack booking and summary */
-  gap: 20px;
+  align-items: flex-start;
+  gap: 30px;
   width: 100%;
   max-width: 1200px;
 }
-
-/* On larger screens (md and up), go back to side-by-side */
-@media (min-width: 768px) {
-    .main-container {
-        padding: 40px 15px;
-    }
-    .page-wrapper {
-        flex-direction: row;
-        align-items: stretch;
-        gap: 30px;
-    }
-}
-
-
 .booking-container, .summary-container {
   background-color: #ffffff;
   border-radius: 24px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.07);
-  padding: 30px 25px; /* Adjust padding for mobile */
+  padding: 40px 50px;
   border: 1px solid #f0f0f0;
-  width: 100%;
-  box-sizing: border-box;
 }
-
-@media (min-width: 768px) {
-    .booking-container, .summary-container {
-        padding: 40px 50px;
-    }
-}
-
-
 .booking-container { flex: 2; }
-.summary-container { flex: 1; }
-.summary-container.hidden { display: none; }
+.summary-container { flex: 1; position: sticky; top: 104px; }
 
-
-.navigation-buttons {
-  display: flex;
-  flex-direction: column-reverse; /* Stack buttons on mobile */
-  gap: 15px;
-  margin-top: 40px;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 30px;
+@media (max-width: 992px) {
+  .page-wrapper { flex-direction: column; align-items: stretch; }
+  .summary-container { position: static; }
 }
-
-.btn-primary, .btn-secondary {
-    width: 100%; /* Make buttons full-width on mobile */
-}
-
-/* On larger screens, put buttons side-by-side again */
-@media (min-width: 768px) {
-    .navigation-buttons {
-        flex-direction: row;
-        justify-content: flex-end;
-    }
-    .btn-primary, .btn-secondary {
-        width: auto; /* Revert to auto-width on desktop */
-        min-width: 150px;
-    }
-}
-
-
-.btn-primary {
-  background: linear-gradient(45deg, #7fa7ff, #8b6dff);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 16px 32px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.btn-primary:hover { transform: translateY(-2px); }
-.btn-primary:disabled { background: #cbd5e0; cursor: not-allowed; box-shadow: none; transform: translateY(0); }
-
-.btn-secondary {
-  background-color: #f1f5f9;
-  color: #4a5568;
-  border: none;
-  border-radius: 12px;
-  padding: 16px 32px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-.btn-secondary:hover { background-color: #e2e8f0; }

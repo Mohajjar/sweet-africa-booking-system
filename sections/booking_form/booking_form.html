@@ -1,0 +1,101 @@
+<div class="step-content">
+    <div class="form-section">
+        <h1>Choose Your Service</h1>
+        <p class="subtitle">Select the type of service you are looking for.</p>
+        <div class="service-options">
+            <div class="service-card selected" data-service="house-cleaning" data-industry="Home Cleaning" data-service-name="Standard Clean"><i class="fas fa-home"></i><h3>House Cleaning</h3></div>
+            <div class="service-card" data-service="deep-cleaning" data-industry="Home Cleaning" data-service-name="Deep Clean"><i class="fas fa-soap"></i><h3>Deep Cleaning</h3></div>
+            <div class="service-card" data-service="move-in-out" data-industry="Moving" data-service-name="Move In/Out Clean"><i class="fas fa-truck-moving"></i><h3>Move in/out</h3></div>
+            <div class="service-card" data-service="laundry" data-industry="Add-on" data-service-name="Laundry Service"><i class="fas fa-tshirt"></i><h3>Laundry</h3></div>
+            <div class="service-card" data-service="commercial" data-industry="Commercial" data-service-name="Office Cleaning"><i class="fas fa-building"></i><h3>Commercial</h3></div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h3 class="section-title">What Needs To Be Done?</h3>
+        <div class="input-row">
+            <div class="input-group"><label>Bathrooms</label><div class="quantity-input"><button type="button" class="quantity-minus">-</button><input type="text" value="1" readonly><button type="button" class="quantity-plus">+</button></div></div>
+            <div class="input-group"><label>Bedrooms</label><div class="quantity-input"><button type="button" class="quantity-minus">-</button><input type="text" value="1" readonly><button type="button" class="quantity-plus">+</button></div></div>
+        </div>
+    </div>
+    <div class="form-section">
+        <h3 class="section-title">Select Extras</h3>
+        <div class="extras-grid">
+            <div class="extra-card" data-extra="organization"><img src="https://i.ibb.co/GvxP8r2/organize.png" alt="Organization Icon"><span>Organization</span></div>
+
+            <div class="extra-card" data-extra="laundry"><img src="https://i.ibb.co/yQW2Y3x/laundry-2.png" alt="Laundry Icon"><span>Laundry</span></div>
+
+            <div class="extra-card" data-extra="dishes"><img src="https://i.ibb.co/hXnfQ7d/dishes-2.png" alt="Dishes Icon"><span>Dishes</span></div>
+
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h3 class="section-title">Select a Date & Time</h3>
+        <div class="input-group"><label for="date-picker">Date</label><input type="text" id="date-picker" placeholder="Select a date..."></div>
+        <div class="input-group"><label>Available Times</label><div class="time-slots-grid">
+            <button class="time-slot">09:00 AM</button><button class="time-slot">10:00 AM</button><button class="time-slot">11:00 AM</button><button class="time-slot">12:00 PM</button>
+            <button class="time-slot">01:00 PM</button><button class="time-slot">02:00 PM</button><button class="time-slot">03:00 PM</button><button class="time-slot">04:00 PM</button>
+        </div></div>
+    </div>
+
+    <div class="form-section">
+        <h3 class="section-title">Your Details & Payment</h3>
+        <div class="input-group"><label for="full-name">Full Name</label><input type="text" id="full-name" placeholder="John Doe"></div>
+        <div class="input-group"><label for="email">Email Address</label><input type="email" id="email" placeholder="you@example.com"></div>
+        <div class="input-group"><label for="phone">Phone Number</label><div class="phone-input-wrapper"><span class="phone-prefix">+1</span><input type="tel" id="phone" class="phone-input-field" placeholder="(555) 123-4567"></div></div>
+        <div class="input-group"><label for="address">Address</label><input type="text" id="address" placeholder="123 Main St"></div>
+        <div class="input-group"><label for="apartment">Apartment, suite, etc. (Optional)</label><input type="text" id="apartment" placeholder="Apt #4B"></div>
+    </div>
+    <div class="form-section">
+    <h3 class="section-title">Payment Information</h3>
+    <div class="payment-method-options">
+        <div class="radio-group">
+            <input type="radio" id="payment-card" name="payment-method" value="card" checked>
+            <label for="payment-card">New Credit Card</label>
+            <div class="payment-icons">
+                <i class="fa-brands fa-cc-visa"></i>
+                <i class="fa-brands fa-cc-mastercard"></i>
+                <i class="fa-brands fa-cc-amex"></i>
+            </div>
+        </div>
+        <div class="radio-group">
+            <input type="radio" id="payment-cash" name="payment-method" value="cash">
+            <label for="payment-cash">Cash/Check</label>
+        </div>
+    </div>
+    <div id="credit-card-info">
+        <div class="input-group">
+            <label for="billing-address">Billing address</label>
+            <input type="text" id="billing-address" placeholder="Type address">
+        </div>
+        <div class="input-group">
+            <label for="name-on-card">Name on Card</label>
+            <input type="text" id="name-on-card" placeholder="John M. Doe">
+        </div>
+        <div class="input-group">
+            <label for="card-number">Card Number</label>
+            <input type="text" id="card-number" placeholder="•••• •••• •••• ••••">
+        </div>
+        <div class="input-row">
+            <div class="input-group">
+                <label for="expiry-date">Expiry Date</label>
+                <input type="text" id="expiry-date" placeholder="MM / YY">
+            </div>
+            <div class="input-group">
+                <label for="cvc">CVC</label>
+                <input type="text" id="cvc" placeholder="123">
+            </div>
+        </div>
+        </div>
+</div>
+    <div class="form-footer">
+    <div class="checkbox-group">
+        <input type="checkbox" id="terms-checkbox">
+        <label for="terms-checkbox">I affirm that I have read and agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</label>
+    </div>
+    <div class="navigation-buttons">
+        <button id="complete-booking-btn" class="btn-primary" disabled>Complete Booking</button>
+    </div>
+</div>
+</div>
