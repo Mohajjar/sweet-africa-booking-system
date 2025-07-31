@@ -232,21 +232,61 @@ async function calculateAndDisplayFinance(allBookings, startDate, endDate) {
 async function initializeAndDisplayCalendar() {
   const calendarEl = document.getElementById("booking-calendar");
   if (!calendarEl) return;
+
   try {
     const querySnapshot = await getDocs(query(collection(db, "bookings")));
-    const events = querySnapshot.docs.map((doc) => {
-      const booking = doc.data();
-      const eventColor = getStatusColor(booking.status);
-      const timeParts = booking.time ? booking.time.split(" ")[0] : "12:00";
-      const dateStr = booking.date;
-      const isoDate = new Date(dateStr).toISOString().split("T")[0];
-      return {
-        title: `${booking.customerName} - ${booking.service}`,
-        start: `${isoDate}T${timeParts}:00`,
-        color: eventColor,
-        borderColor: eventColor,
-      };
-    });
+
+    const events = querySnapshot.docs
+      .map((doc) => {
+        const booking = doc.data();
+
+        // 1. Skip this booking if the date is invalid or not set
+        if (!booking.date || booking.date === "Not Selected") {
+          return null;
+        }
+
+        // 2. Parse the time string (e.g., "02:00 PM") into 24-hour format
+        let timeStr = "12:00:00"; // Default to noon
+        if (booking.time && booking.time !== "Not Selected") {
+          try {
+            let [time, modifier] = booking.time.split(" ");
+            let [hours, minutes] = time.split(":");
+            hours = parseInt(hours, 10);
+            if (modifier.toUpperCase() === "PM" && hours < 12) {
+              hours += 12;
+            }
+            if (modifier.toUpperCase() === "AM" && hours === 12) {
+              hours = 0; // Midnight case
+            }
+            const paddedHours = String(hours).padStart(2, "0");
+            timeStr = `${paddedHours}:${minutes}:00`;
+          } catch (e) {
+            console.warn(
+              "Could not parse time for booking, using default. Time was:",
+              booking.time
+            );
+          }
+        }
+
+        // 3. Create a date object from the date and parsed time
+        const dateObj = new Date(`${booking.date} ${timeStr}`);
+
+        // 4. Final safety check. If the date is still invalid, skip it.
+        if (isNaN(dateObj.getTime())) {
+          console.warn("Skipping event with invalid date:", booking);
+          return null;
+        }
+
+        const eventColor = getStatusColor(booking.status);
+        return {
+          title: `${booking.customerName} - ${booking.service}`,
+          start: dateObj.toISOString(), // Use the full ISO string
+          color: eventColor,
+          borderColor: eventColor,
+        };
+      })
+      .filter((event) => event !== null); // 5. Remove any entries that were skipped
+
     const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: "dayGridMonth",
       headerToolbar: {
