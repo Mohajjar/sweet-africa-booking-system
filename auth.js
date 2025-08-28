@@ -87,8 +87,8 @@ signupForm.addEventListener("submit", async (e) => {
       role: "customer", // Set default role
     });
 
-    // Redirect to the booking page after successful signup
-    window.location.href = "index.html";
+    // *** MODIFIED: Redirect to the new booking page ***
+    window.location.href = "booking.html";
   } catch (error) {
     errorMessageElement.textContent = error.message;
   }
@@ -115,7 +115,8 @@ loginForm.addEventListener("submit", async (e) => {
     if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
       window.location.href = "admin.html";
     } else {
-      window.location.href = "index.html";
+      // *** MODIFIED: Redirect to the new booking page ***
+      window.location.href = "booking.html";
     }
   } catch (error) {
     errorMessageElement.textContent = error.message;
