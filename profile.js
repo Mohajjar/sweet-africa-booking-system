@@ -1,4 +1,8 @@
-import { onAuthStateChanged, signOut } from "https://esm.run/firebase/auth";
+// Import the functions from the correct, consistent Firebase SDK URLs
+import {
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -8,8 +12,8 @@ import {
   doc,
   getDoc,
   updateDoc,
-} from "https://esm.run/firebase/firestore";
-import { auth, db } from "./firebase-config.js"; // <-- Correctly importing from your new config file
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { auth, db } from "./firebase-config.js"; // <-- Your config file is correct
 
 // --- HELPER FUNCTION FOR STATUS COLORS ---
 function getStatusClasses(status) {

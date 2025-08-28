@@ -298,11 +298,16 @@ async function fetchAndDisplayBookings() {
       id: doc.id,
       ...doc.data(),
     }));
+
+    // *** MODIFIED SORTING LOGIC ***
     bookings.sort((a, b) => {
-      if (a.status === "Pending" && b.status !== "Pending") return -1;
-      if (a.status !== "Pending" && b.status === "Pending") return 1;
-      return 0;
+      // Convert date strings to Date objects for proper comparison
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      // Sort in descending order (latest dates first)
+      return dateB - dateA;
     });
+
     bookingsTableBody.innerHTML = "";
     if (bookings.length === 0) {
       bookingsTableBody.innerHTML =
