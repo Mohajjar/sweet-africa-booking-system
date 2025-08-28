@@ -41,22 +41,9 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
-            authDomain: "sweet-africa-bookings.firebaseapp.com",
-            projectId: "sweet-africa-bookings",
-            storageBucket: "sweet-africa-bookings.firebasestorage.app",
-            messagingSenderId: "950167391030",
-            appId: "1:950167391030:web:1085602775ce912d220197"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        import { collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { auth, db } from './firebase-config.js'; // <-- Import from the new central file
 
         const bookingState = {
             industry: 'Home Cleaning', service: 'Standard Clean', bedrooms: 1, bathrooms: 1, extras: [],
@@ -276,28 +263,28 @@
         }
 
         onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            bookingState.customerName = userData.name || '';
-            bookingState.customerEmail = userData.email || '';
-        }
-        document.getElementById('logout-button').addEventListener('click', () => signOut(auth));
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    bookingState.customerName = userData.name || '';
+                    bookingState.customerEmail = userData.email || '';
+                }
+                document.getElementById('logout-button').addEventListener('click', () => signOut(auth));
 
-        // --- Mobile Menu Toggle Logic ---
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const nav = document.querySelector('nav');
-        mobileMenuBtn.addEventListener('click', () => {
-            nav.classList.toggle('nav-open');
+                // --- Mobile Menu Toggle Logic ---
+                const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+                const nav = document.querySelector('nav');
+                mobileMenuBtn.addEventListener('click', () => {
+                    nav.classList.toggle('nav-open');
+                });
+
+                await loadAllComponents();
+            } else {
+                window.location.href = 'login.html';
+            }
         });
-
-        await loadAllComponents();
-    } else {
-        window.location.href = 'login.html';
-    }
-});
     </script>
 </body>
 </html>

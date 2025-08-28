@@ -1,9 +1,4 @@
-import { initializeApp } from "https://esm.run/firebase/app";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut,
-} from "https://esm.run/firebase/auth";
+import { onAuthStateChanged, signOut } from "https://esm.run/firebase/auth";
 import {
   getFirestore,
   collection,
@@ -13,23 +8,8 @@ import {
   doc,
   getDoc,
   updateDoc,
-  setDoc,
 } from "https://esm.run/firebase/firestore";
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
-  authDomain: "sweet-africa-bookings.firebaseapp.com",
-  projectId: "sweet-africa-bookings",
-  storageBucket: "sweet-africa-bookings.firebasestorage.app",
-  messagingSenderId: "950167391030",
-  appId: "1:950167391030:web:1085602775ce912d220197",
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { auth, db } from "./firebase-config.js"; // <-- Correctly importing from your new config file
 
 // --- HELPER FUNCTION FOR STATUS COLORS ---
 function getStatusClasses(status) {

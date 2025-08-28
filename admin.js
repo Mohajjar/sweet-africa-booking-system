@@ -1,6 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
-  getAuth,
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -14,20 +12,7 @@ import {
   getDoc,
   addDoc,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-// --- Firebase Config ---
-const firebaseConfig = {
-  apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
-  authDomain: "sweet-africa-bookings.firebaseapp.com",
-  projectId: "sweet-africa-bookings",
-  storageBucket: "sweet-africa-bookings.firebasestorage.app",
-  messagingSenderId: "950167391030",
-  appId: "1:950167391030:web:1085602775ce912d220197",
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { auth, db } from "./firebase-config.js";
 
 // --- HELPER FUNCTIONS ---
 function getStatusClasses(status) {

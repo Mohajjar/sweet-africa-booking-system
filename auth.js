@@ -1,5 +1,4 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -11,21 +10,7 @@ import {
   setDoc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyAjKL8-QPcOKIXCC9L3K9EVRy2LfAcEhxI",
-  authDomain: "sweet-africa-bookings.firebaseapp.com",
-  projectId: "sweet-africa-bookings",
-  storageBucket: "sweet-africa-bookings.firebasestorage.app",
-  messagingSenderId: "950167391030",
-  appId: "1:950167391030:web:1085602775ce912d220197",
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { auth, db } from "./firebase-config.js"; // <-- Correctly importing from your new config file
 
 // --- DOM Elements ---
 const loginForm = document.getElementById("login-form");
