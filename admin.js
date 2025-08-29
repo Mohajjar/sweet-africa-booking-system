@@ -66,7 +66,7 @@ onAuthStateChanged(auth, async (user) => {
       loadBookingsView();
       setupAddNewBooking();
     } else {
-      document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="index.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
+      document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="booking.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
     }
   } else {
     window.location.href = "login.html";
@@ -149,7 +149,7 @@ async function loadFinanceView() {
 async function fetchAllBookings() {
   try {
     const querySnapshot = await getDocs(query(collection(db, "bookings")));
-    return querySnapshot.docs.map((doc) => doc.data());
+    return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     console.error("Error fetching all bookings: ", error);
     return [];
@@ -214,73 +214,60 @@ async function calculateAndDisplayFinance(allBookings, startDate, endDate) {
   });
 }
 
+// *** THIS IS THE ENTIRELY UPDATED CALENDAR FUNCTION ***
 async function initializeAndDisplayCalendar() {
   const calendarEl = document.getElementById("booking-calendar");
   if (!calendarEl) return;
 
   try {
-    const querySnapshot = await getDocs(query(collection(db, "bookings")));
-
-    const events = querySnapshot.docs
-      .map((doc) => {
-        const booking = doc.data();
-
-        // 1. Skip this booking if the date is invalid or not set
-        if (!booking.date || booking.date === "Not Selected") {
-          return null;
-        }
-
-        // 2. Parse the time string (e.g., "02:00 PM") into 24-hour format
-        let timeStr = "12:00:00"; // Default to noon
+    const allBookings = await fetchAllBookings();
+    const events = allBookings
+      .map((booking) => {
+        if (!booking.date || booking.date === "Not Selected") return null;
+        let timeStr = "12:00:00";
         if (booking.time && booking.time !== "Not Selected") {
           try {
             let [time, modifier] = booking.time.split(" ");
             let [hours, minutes] = time.split(":");
             hours = parseInt(hours, 10);
-            if (modifier.toUpperCase() === "PM" && hours < 12) {
-              hours += 12;
-            }
-            if (modifier.toUpperCase() === "AM" && hours === 12) {
-              hours = 0; // Midnight case
-            }
+            if (modifier.toUpperCase() === "PM" && hours < 12) hours += 12;
+            if (modifier.toUpperCase() === "AM" && hours === 12) hours = 0;
             const paddedHours = String(hours).padStart(2, "0");
             timeStr = `${paddedHours}:${minutes}:00`;
           } catch (e) {
-            console.warn(
-              "Could not parse time for booking, using default. Time was:",
-              booking.time
-            );
+            console.warn("Could not parse time for booking:", booking.time);
           }
         }
-
-        // 3. Create a date object from the date and parsed time
         const dateObj = new Date(`${booking.date} ${timeStr}`);
-
-        // 4. Final safety check. If the date is still invalid, skip it.
         if (isNaN(dateObj.getTime())) {
           console.warn("Skipping event with invalid date:", booking);
           return null;
         }
-
-        const eventColor = getStatusColor(booking.status);
         return {
           title: `${booking.customerName} - ${booking.service}`,
-          start: dateObj.toISOString(), // Use the full ISO string
-          color: eventColor,
-          borderColor: eventColor,
+          start: dateObj.toISOString(),
+          color: getStatusColor(booking.status),
+          borderColor: getStatusColor(booking.status),
+          extendedProps: {
+            bookingDetails: booking,
+          },
         };
       })
-      .filter((event) => event !== null); // 5. Remove any entries that were skipped
+      .filter(Boolean);
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: "dayGridMonth",
+      // *** MODIFIED: Set the default view to a list ***
+      initialView: "listWeek",
+
+      // *** MODIFIED: Simplified the header for a list-only view ***
       headerToolbar: {
         left: "prev,next today",
         center: "title",
-        right: "dayGridMonth,timeGridWeek,listWeek",
+        right: "", // Removed the month, week, and list buttons
       },
       events: events,
       editable: false,
+      height: "auto",
     });
     calendar.render();
   } catch (error) {
@@ -293,20 +280,8 @@ async function initializeAndDisplayCalendar() {
 async function fetchAndDisplayBookings() {
   const bookingsTableBody = document.getElementById("bookings-table-body");
   try {
-    const querySnapshot = await getDocs(query(collection(db, "bookings")));
-    const bookings = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    // *** MODIFIED SORTING LOGIC ***
-    bookings.sort((a, b) => {
-      // Convert date strings to Date objects for proper comparison
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      // Sort in descending order (latest dates first)
-      return dateB - dateA;
-    });
+    const bookings = await fetchAllBookings();
+    bookings.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     bookingsTableBody.innerHTML = "";
     if (bookings.length === 0) {
@@ -314,10 +289,9 @@ async function fetchAndDisplayBookings() {
         '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No customer bookings found.</td></tr>';
       return;
     }
-    bookings.forEach((bookingData) => {
-      const { id: bookingId, ...booking } = bookingData;
+    bookings.forEach((booking) => {
       const row = document.createElement("tr");
-      row.id = `booking-row-${bookingId}`;
+      row.id = `booking-row-${booking.id}`;
       const statusClasses = getStatusClasses(booking.status);
       const statusBadge = `<span class="status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses}">${
         booking.status || "N/A"
@@ -326,7 +300,9 @@ async function fetchAndDisplayBookings() {
         typeof booking.totalPrice === "number"
           ? `$${booking.totalPrice.toFixed(2)}`
           : "N/A";
-      const actionsDropdown = `<select data-booking-id="${bookingId}" class="status-select rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"><option value="Pending" ${
+      const actionsDropdown = `<select data-booking-id="${
+        booking.id
+      }" class="status-select rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"><option value="Pending" ${
         booking.status === "Pending" ? "selected" : ""
       }>Pending</option><option value="Confirmed" ${
         booking.status === "Confirmed" ? "selected" : ""
@@ -352,7 +328,6 @@ async function fetchAndDisplayBookings() {
           badge.className = `status-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
             newStatus
           )}`;
-          initializeAndDisplayCalendar();
         }
         event.target.disabled = false;
       });
@@ -411,9 +386,8 @@ function setupAddNewBooking() {
   const openModalBtn = document.getElementById("add-new-booking-btn");
   const closeModalBtn = document.getElementById("cancel-add-booking-btn");
   const addBookingForm = document.getElementById("add-booking-form");
-  const priceInput = document.getElementById("new-booking-price"); // Get price input
+  const priceInput = document.getElementById("new-booking-price");
 
-  // Use Flatpickr for the date input in the modal
   flatpickr("#new-booking-date", {
     minDate: "today",
     dateFormat: "F j, Y",
@@ -427,9 +401,7 @@ function setupAddNewBooking() {
     modal.classList.add("hidden");
   });
 
-  // NEW: Add formatter for the price input
   priceInput.addEventListener("blur", (e) => {
-    // 'blur' means when the user clicks away
     const value = parseFloat(e.target.value.replace(/[^0-9.]/g, ""));
     if (!isNaN(value)) {
       e.target.value = `$${value.toFixed(2)}`;
@@ -448,10 +420,10 @@ function setupAddNewBooking() {
         document.getElementById("new-booking-bathrooms").value
       ),
       date: document.getElementById("new-booking-date").value,
-      time: document.getElementById("new-booking-time").value, // Now gets value from select
-      totalPrice: parseFloat(priceInput.value.replace(/[^0-9.]/g, "")), // Clean and parse the price
+      time: document.getElementById("new-booking-time").value,
+      totalPrice: parseFloat(priceInput.value.replace(/[^0-9.]/g, "")),
       status: "Confirmed",
-      notes: document.getElementById("new-booking-notes").value, // NEW: Get notes value
+      notes: document.getElementById("new-booking-notes").value,
     };
 
     try {
@@ -459,11 +431,10 @@ function setupAddNewBooking() {
       modal.classList.add("hidden");
       addBookingForm.reset();
 
-      // Refresh views to show the new booking
-      loadBookingsView();
-      // Also refresh calendar if it's the active view
-      const calendarTab = document.getElementById("nav-calendar");
-      if (calendarTab.classList.contains("admin-nav-active")) {
+      if (navBookings.classList.contains("admin-nav-active")) {
+        loadBookingsView();
+      }
+      if (navCalendar.classList.contains("admin-nav-active")) {
         loadCalendarView();
       }
     } catch (error) {

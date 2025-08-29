@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    
     <style>
         body { font-family: 'Poppins', sans-serif; }
         .admin-nav-active {
@@ -26,6 +28,42 @@
         }
         #add-booking-modal {
             transition: opacity 0.3s ease;
+        }
+
+        /* *** NEW & IMPROVED: CSS for the Chat Bubble Tooltip *** */
+        #calendar-tooltip {
+            display: none;
+            background: #2D3748; /* Dark Gray */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            line-height: 1.6;
+            pointer-events: none; /* Critical for smooth hover */
+        }
+
+        #tooltip-arrow,
+        #tooltip-arrow::before {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: inherit;
+        }
+
+        #tooltip-arrow {
+            visibility: hidden;
+        }
+
+        #tooltip-arrow::before {
+            content: '';
+            visibility: visible;
+            transform: rotate(45deg);
+        }
+
+        #calendar-tooltip[data-popper-placement^='top'] > #tooltip-arrow {
+            bottom: -5px;
         }
     </style>
 </head>
