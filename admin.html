@@ -15,51 +15,14 @@
     
     <style>
         body { font-family: 'Poppins', sans-serif; }
-        /* The .admin-nav-active class is no longer needed */
         #booking-calendar {
             background-color: #ffffff;
             padding: 20px;
             border-radius: 1.5rem;
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
-        #add-booking-modal {
+        #add-booking-modal, #add-staff-modal, #delete-staff-modal {
             transition: opacity 0.3s ease;
-        }
-
-        /* *** NEW & IMPROVED: CSS for the Chat Bubble Tooltip *** */
-        #calendar-tooltip {
-            display: none;
-            background: #2D3748; /* Dark Gray */
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 1001;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            line-height: 1.6;
-            pointer-events: none; /* Critical for smooth hover */
-        }
-
-        #tooltip-arrow,
-        #tooltip-arrow::before {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: inherit;
-        }
-
-        #tooltip-arrow {
-            visibility: hidden;
-        }
-
-        #tooltip-arrow::before {
-            content: '';
-            visibility: visible;
-            transform: rotate(45deg);
-        }
-
-        #calendar-tooltip[data-popper-placement^='top'] > #tooltip-arrow {
-            bottom: -5px;
         }
     </style>
 </head>
@@ -79,26 +42,25 @@
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8" style="display: none;">
         <nav class="flex border-b border-gray-200 mb-6">
-            <!-- Removed 'admin-nav-active' and simplified classes -->
-            <button id="nav-bookings" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            <button id="nav-bookings" class="py-4 px-6 text-gray-500 hover:text-blue-600 focus:outline-none border-b-2 border-transparent transition-colors duration-200">
                 Bookings
             </button>
-            <button id="nav-customers" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            <button id="nav-customers" class="py-4 px-6 text-gray-500 hover:text-blue-600 focus:outline-none border-b-2 border-transparent transition-colors duration-200">
                 Customers
             </button>
-            <button id="nav-calendar" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            <button id="nav-staff" class="py-4 px-6 text-gray-500 hover:text-blue-600 focus:outline-none border-b-2 border-transparent transition-colors duration-200">
+                Staff
+            </button>
+            <button id="nav-calendar" class="py-4 px-6 text-gray-500 hover:text-blue-600 focus:outline-none border-b-2 border-transparent transition-colors duration-200">
                 Calendar
             </button>
-            <button id="nav-finance" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            <button id="nav-finance" class="py-4 px-6 text-gray-500 hover:text-blue-600 focus:outline-none border-b-2 border-transparent transition-colors duration-200">
                 Finance
-            </button>
-            <button id="nav-staff" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
-                Staff
             </button>
         </nav>
 
         <div class="mb-6 text-right">
-            <button id="add-new-booking-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">+ New Booking</button>
+            <button id="add-new-booking-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition" style="display: none;">+ New Booking</button>
         </div>
         
         <div id="admin-content">
@@ -106,11 +68,11 @@
         </div>
     </main>
 
+    <!-- Add Booking Modal -->
     <div id="add-booking-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-10 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-2xl bg-white">
             <h3 class="text-xl leading-6 font-bold text-gray-900 mb-6">Add New Booking</h3>
             <form id="add-booking-form" class="space-y-4">
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="new-booking-name" class="block text-sm font-medium text-gray-700">Customer Name</label>
@@ -121,7 +83,6 @@
                         <input type="email" id="new-booking-email" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
                     </div>
                 </div>
-                
                 <div>
                     <label for="new-booking-service" class="block text-sm font-medium text-gray-700">Service</label>
                     <select id="new-booking-service" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
@@ -132,7 +93,6 @@
                         <option value="Office Cleaning">Office Cleaning</option>
                     </select>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="new-booking-bedrooms" class="text-sm font-medium text-gray-700">Bedrooms</label>
@@ -143,7 +103,6 @@
                         <input type="number" id="new-booking-bathrooms" value="1" min="0" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="new-booking-date" class="block text-sm font-medium text-gray-700">Select Date</label>
@@ -164,17 +123,14 @@
                         </select>
                     </div>
                 </div>
-                
                 <div>
                     <label for="new-booking-price" class="text-sm font-medium text-gray-700">Total Price</label>
                     <input type="text" id="new-booking-price" placeholder="$150.00" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
                 </div>
-
                 <div>
                     <label for="new-booking-notes" class="text-sm font-medium text-gray-700">Add Note (Optional)</label>
                     <textarea id="new-booking-notes" rows="3" placeholder="Enter any special instructions..." class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm"></textarea>
                 </div>
-
                 <div class="flex items-center justify-end space-x-4 pt-4 border-t mt-6">
                     <button id="cancel-add-booking-btn" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Cancel</button>
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">Save Booking</button>
@@ -183,7 +139,7 @@
         </div>
     </div>
 
-    <!-- Add New Staff Modal -->
+    <!-- Add Staff Modal -->
     <div id="add-staff-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-10 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-2xl bg-white">
             <h3 class="text-xl leading-6 font-bold text-gray-900 mb-6">Add New Staff Member</h3>
@@ -196,15 +152,23 @@
                     <label for="new-staff-email" class="block text-sm font-medium text-gray-700">Email Address</label>
                     <input type="email" id="new-staff-email" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
                 </div>
-                 <div>
+                <div>
                     <label for="new-staff-phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
                     <input type="tel" id="new-staff-phone" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 </div>
                 <div>
-                    <label for="new-staff-password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="new-staff-password" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required placeholder="Min. 6 characters">
+                    <label for="new-staff-role" class="block text-sm font-medium text-gray-700">Role</label>
+                    <select id="new-staff-role" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+                        <option value="cleaner">Cleaner</option>
+                        <option value="manager">Manager</option>
+                        <option value="owner">Owner</option>
+                    </select>
                 </div>
-                 <p id="add-staff-error" class="text-red-500 text-sm hidden"></p>
+                <div>
+                    <label for="new-staff-password" class="block text-sm font-medium text-gray-700">Create Password</label>
+                    <input type="password" id="new-staff-password" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+                    <p id="add-staff-error" class="text-red-500 text-xs mt-1 hidden"></p>
+                </div>
                 <div class="flex items-center justify-end space-x-4 pt-4 border-t mt-6">
                     <button id="cancel-add-staff-btn" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Cancel</button>
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">Save Staff Member</button>
@@ -213,8 +177,24 @@
         </div>
     </div>
 
-    <script src="admin.js" type="module"></script>
-
+    <!-- Delete Staff Confirmation Modal -->
+    <div id="delete-staff-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+            <h3 class="text-lg leading-6 font-bold text-gray-900">Confirm Deletion</h3>
+            <div class="mt-2">
+                <p class="text-sm text-gray-500">Are you sure you want to remove this staff member? This action cannot be undone.</p>
+            </div>
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="cancel-delete-staff-btn" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Cancel</button>
+                <button id="confirm-delete-staff-btn" type="button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">Delete</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="admin.js?v=2" type="module"></script>
+    <script src="admin-ui.js?v=2" type="module"></script>
+    <script src="admin-data.js?v=2" type="module"></script>
+    <script src="admin-helpers.js?v=2" type="module"></script>
 </body>
 </html>
 
