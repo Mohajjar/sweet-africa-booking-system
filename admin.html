@@ -15,11 +15,7 @@
     
     <style>
         body { font-family: 'Poppins', sans-serif; }
-        .admin-nav-active {
-            border-bottom-color: #3b82f6;
-            color: #3b82f6;
-            font-weight: 700;
-        }
+        /* The .admin-nav-active class is no longer needed */
         #booking-calendar {
             background-color: #ffffff;
             padding: 20px;
@@ -83,17 +79,21 @@
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8" style="display: none;">
         <nav class="flex border-b border-gray-200 mb-6">
-            <button id="nav-bookings" class="admin-nav-active py-4 px-6 font-semibold text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            <!-- Removed 'admin-nav-active' and simplified classes -->
+            <button id="nav-bookings" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
                 Bookings
             </button>
-            <button id="nav-customers" class="py-4 px-6 font-semibold text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            <button id="nav-customers" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
                 Customers
             </button>
-            <button id="nav-calendar" class="py-4 px-6 font-semibold text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            <button id="nav-calendar" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
                 Calendar
             </button>
-            <button id="nav-finance" class="py-4 px-6 font-semibold text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+            <button id="nav-finance" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
                 Finance
+            </button>
+            <button id="nav-staff" class="py-4 px-6 text-gray-500 hover:text-blue-500 focus:outline-none border-b-2 border-transparent">
+                Staff
             </button>
         </nav>
 
@@ -183,7 +183,38 @@
         </div>
     </div>
 
+    <!-- Add New Staff Modal -->
+    <div id="add-staff-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-2xl bg-white">
+            <h3 class="text-xl leading-6 font-bold text-gray-900 mb-6">Add New Staff Member</h3>
+            <form id="add-staff-form" class="space-y-4">
+                <div>
+                    <label for="new-staff-name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="new-staff-name" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+                </div>
+                <div>
+                    <label for="new-staff-email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input type="email" id="new-staff-email" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+                </div>
+                 <div>
+                    <label for="new-staff-phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="tel" id="new-staff-phone" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label for="new-staff-password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="new-staff-password" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required placeholder="Min. 6 characters">
+                </div>
+                 <p id="add-staff-error" class="text-red-500 text-sm hidden"></p>
+                <div class="flex items-center justify-end space-x-4 pt-4 border-t mt-6">
+                    <button id="cancel-add-staff-btn" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Cancel</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">Save Staff Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="admin.js" type="module"></script>
 
 </body>
 </html>
+

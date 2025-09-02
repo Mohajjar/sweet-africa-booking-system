@@ -1,4 +1,5 @@
 import {
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -11,6 +12,8 @@ import {
   updateDoc,
   getDoc,
   addDoc,
+  setDoc,
+  where,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { auth, db } from "./firebase-config.js";
 
@@ -54,26 +57,43 @@ const navBookings = document.getElementById("nav-bookings");
 const navCustomers = document.getElementById("nav-customers");
 const navCalendar = document.getElementById("nav-calendar");
 const navFinance = document.getElementById("nav-finance");
+const navStaff = document.getElementById("nav-staff");
+const addNewBookingBtn = document.getElementById("add-new-booking-btn");
 
-// --- MAIN APP LOGIC ---
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const userDocRef = doc(db, "users", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
-    if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
-      mainContent.style.display = "block";
-      setupNavigation();
-      loadBookingsView();
-      setupAddNewBooking();
-    } else {
-      document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="booking.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
-    }
-  } else {
-    window.location.href = "login.html";
-  }
-});
+// --- STATE FOR PAGINATION ---
+let currentPage = 1;
+const bookingsPerPage = 10;
 
 // --- Navigation ---
+function setActiveTab(activeButton) {
+  const navButtons = [
+    navBookings,
+    navCustomers,
+    navCalendar,
+    navFinance,
+    navStaff,
+  ];
+
+  const activeClasses = ["border-blue-500", "text-blue-600", "font-semibold"];
+  const inactiveClasses = ["border-transparent", "text-gray-500"];
+
+  navButtons.forEach((button) => {
+    if (button === activeButton) {
+      button.classList.add(...activeClasses);
+      button.classList.remove(...inactiveClasses);
+    } else {
+      button.classList.remove(...activeClasses);
+      button.classList.add(...inactiveClasses);
+    }
+  });
+
+  if (activeButton === navBookings) {
+    addNewBookingBtn.style.display = "inline-block";
+  } else {
+    addNewBookingBtn.style.display = "none";
+  }
+}
+
 function setupNavigation() {
   navBookings.addEventListener("click", () => {
     setActiveTab(navBookings);
@@ -91,18 +111,35 @@ function setupNavigation() {
     setActiveTab(navFinance);
     loadFinanceView();
   });
+  navStaff.addEventListener("click", () => {
+    setActiveTab(navStaff);
+    loadStaffView();
+  });
 }
 
-function setActiveTab(activeButton) {
-  [navBookings, navCustomers, navCalendar, navFinance].forEach((button) =>
-    button.classList.remove("admin-nav-active")
-  );
-  activeButton.classList.add("admin-nav-active");
-}
+// --- MAIN APP LOGIC ---
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const userDocRef = doc(db, "users", user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
+      mainContent.style.display = "block";
+      setupNavigation();
+      setActiveTab(navBookings);
+      loadBookingsView();
+      setupAddNewBooking();
+      setupAddNewStaff();
+    } else {
+      document.body.innerHTML = `<div class="h-screen w-screen flex flex-col justify-center items-center"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">You do not have permission to view this page.</p><a href="booking.html" class="mt-4 text-blue-500 hover:underline">Go to Booking Page</a></div>`;
+    }
+  } else {
+    window.location.href = "login.html";
+  }
+});
 
 // --- View Loaders ---
 async function loadBookingsView() {
-  adminContentDiv.innerHTML = `<div class="bg-white shadow-lg rounded-2xl overflow-hidden"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200"><tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr></tbody></table></div>`;
+  adminContentDiv.innerHTML = `<div class="bg-white shadow-lg rounded-2xl overflow-hidden"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Details</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th></tr></thead><tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200"><tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td></tr></tbody></table></div><div id="pagination-container" class="mt-4 flex justify-center"></div>`;
   await fetchAndDisplayBookings();
 }
 
@@ -143,6 +180,38 @@ async function loadFinanceView() {
     },
   });
   calculateAndDisplayFinance(allBookings);
+}
+
+async function loadStaffView() {
+  adminContentDiv.innerHTML = `
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Staff Management</h2>
+        <button id="add-new-staff-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New Staff</button>
+    </div>
+    <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="staff-table-body" class="bg-white divide-y divide-gray-200">
+                <tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading staff...</td></tr>
+            </tbody>
+        </table>
+    </div>`;
+
+  const addNewStaffBtn = document.getElementById("add-new-staff-btn");
+  const staffModal = document.getElementById("add-staff-modal");
+  if (addNewStaffBtn && staffModal) {
+    addNewStaffBtn.addEventListener("click", () => {
+      staffModal.classList.remove("hidden");
+    });
+  }
+  await fetchAndDisplayStaff();
 }
 
 // --- Data Fetching & Logic ---
@@ -214,7 +283,6 @@ async function calculateAndDisplayFinance(allBookings, startDate, endDate) {
   });
 }
 
-// *** THIS IS THE ENTIRELY UPDATED CALENDAR FUNCTION ***
 async function initializeAndDisplayCalendar() {
   const calendarEl = document.getElementById("booking-calendar");
   if (!calendarEl) return;
@@ -256,14 +324,11 @@ async function initializeAndDisplayCalendar() {
       .filter(Boolean);
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      // *** MODIFIED: Set the default view to a list ***
       initialView: "listWeek",
-
-      // *** MODIFIED: Simplified the header for a list-only view ***
       headerToolbar: {
         left: "prev,next today",
         center: "title",
-        right: "", // Removed the month, week, and list buttons
+        right: "",
       },
       events: events,
       editable: false,
@@ -289,7 +354,13 @@ async function fetchAndDisplayBookings() {
         '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No customer bookings found.</td></tr>';
       return;
     }
-    bookings.forEach((booking) => {
+
+    const paginatedBookings = bookings.slice(
+      (currentPage - 1) * bookingsPerPage,
+      currentPage * bookingsPerPage
+    );
+
+    paginatedBookings.forEach((booking) => {
       const row = document.createElement("tr");
       row.id = `booking-row-${booking.id}`;
       const statusClasses = getStatusClasses(booking.status);
@@ -314,6 +385,8 @@ async function fetchAndDisplayBookings() {
       row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${booking.customerName}</div><div class="text-sm text-gray-500">${booking.customerEmail}</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.service}</div><div class="text-sm text-gray-500">${booking.bedrooms} bed, ${booking.bathrooms} bath</div></td><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${booking.date}</div><div class="text-sm text-gray-500">${booking.time}</div></td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${statusBadge}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formattedPrice}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsDropdown}</td>`;
       bookingsTableBody.appendChild(row);
     });
+
+    renderPaginationControls(bookings.length);
 
     document.querySelectorAll(".status-select").forEach((selectElement) => {
       selectElement.addEventListener("change", async (event) => {
@@ -342,7 +415,10 @@ async function fetchAndDisplayBookings() {
 async function fetchAndDisplayCustomers() {
   const customersTableBody = document.getElementById("customers-table-body");
   try {
-    const querySnapshot = await getDocs(query(collection(db, "users")));
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("role", "==", "customer"));
+    const querySnapshot = await getDocs(q);
+
     customersTableBody.innerHTML = "";
     if (querySnapshot.empty) {
       customersTableBody.innerHTML =
@@ -366,6 +442,47 @@ async function fetchAndDisplayCustomers() {
     console.error("Error fetching customers: ", error);
     customersTableBody.innerHTML =
       '<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">Error loading customers.</td></tr>';
+  }
+}
+
+async function fetchAndDisplayStaff() {
+  const staffTableBody = document.getElementById("staff-table-body");
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("role", "==", "staff"));
+    const querySnapshot = await getDocs(q);
+
+    staffTableBody.innerHTML = "";
+    if (querySnapshot.empty) {
+      staffTableBody.innerHTML =
+        '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No staff members found.</td></tr>';
+      return;
+    }
+
+    querySnapshot.forEach((docSnap) => {
+      const userId = docSnap.id;
+      const user = docSnap.data();
+      const row = document.createElement("tr");
+      row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${
+                  user.name || "N/A"
+                }</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+                  user.email || "N/A"
+                }</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${
+                  user.phone || "N/A"
+                }</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="profile.html?id=${userId}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                </td>
+            `;
+      staffTableBody.appendChild(row);
+    });
+  } catch (error) {
+    console.error("Error fetching staff: ", error);
+    staffTableBody.innerHTML =
+      '<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">Error loading staff.</td></tr>';
   }
 }
 
@@ -442,6 +559,105 @@ function setupAddNewBooking() {
       alert("Failed to add booking. Please check the console for errors.");
     }
   });
+}
+
+// --- ADD NEW STAFF MODAL LOGIC ---
+function setupAddNewStaff() {
+  const modal = document.getElementById("add-staff-modal");
+  const closeModalBtn = document.getElementById("cancel-add-staff-btn");
+  const addStaffForm = document.getElementById("add-staff-form");
+  const errorMessage = document.getElementById("add-staff-error");
+
+  if (!modal || !closeModalBtn || !addStaffForm) return;
+
+  closeModalBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+    addStaffForm.reset();
+    errorMessage.classList.add("hidden");
+  });
+
+  addStaffForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorMessage.classList.add("hidden");
+
+    const name = document.getElementById("new-staff-name").value;
+    const email = document.getElementById("new-staff-email").value;
+    const phone = document.getElementById("new-staff-phone").value;
+    const password = document.getElementById("new-staff-password").value;
+
+    if (password.length < 6) {
+      errorMessage.textContent = "Password must be at least 6 characters long.";
+      errorMessage.classList.remove("hidden");
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        name: name,
+        email: email,
+        phone: phone,
+        role: "staff",
+      });
+
+      modal.classList.add("hidden");
+      addStaffForm.reset();
+      loadStaffView(); // Refresh the staff list
+    } catch (error) {
+      errorMessage.textContent = error.message;
+      errorMessage.classList.remove("hidden");
+    }
+  });
+}
+
+function renderPaginationControls(totalBookings) {
+  const paginationContainer = document.getElementById("pagination-container");
+  if (!paginationContainer) return;
+
+  const totalPages = Math.ceil(totalBookings / bookingsPerPage);
+  paginationContainer.innerHTML = "";
+
+  if (totalPages <= 1) return;
+
+  const createButton = (text, pageNumber, isDisabled = false) => {
+    const button = document.createElement("button");
+    button.textContent = text;
+    button.disabled = isDisabled;
+    button.className = `px-4 py-2 mx-1 rounded-md ${
+      isDisabled
+        ? "bg-gray-200 text-gray-500"
+        : "bg-white text-gray-700 hover:bg-gray-100"
+    } border border-gray-300`;
+    if (!isDisabled) {
+      button.addEventListener("click", () => {
+        currentPage = pageNumber;
+        fetchAndDisplayBookings();
+      });
+    }
+    return button;
+  };
+
+  paginationContainer.appendChild(
+    createButton("Previous", currentPage - 1, currentPage === 1)
+  );
+
+  for (let i = 1; i <= totalPages; i++) {
+    const button = createButton(i, i, i === currentPage);
+    if (i === currentPage) {
+      button.classList.add("bg-blue-500", "text-white");
+    }
+    paginationContainer.appendChild(button);
+  }
+
+  paginationContainer.appendChild(
+    createButton("Next", currentPage + 1, currentPage === totalPages)
+  );
 }
 
 // --- Logout ---

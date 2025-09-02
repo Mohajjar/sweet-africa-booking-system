@@ -10,11 +10,9 @@ import {
 import { auth, db } from "./firebase-config.js";
 
 // --- DOM Elements ---
-// *** MODIFIED: Select containers for showing/hiding ***
 const loginFormContainer = document.getElementById("login-form-container");
 const signupFormContainer = document.getElementById("signup-form-container");
 
-// *** MODIFIED: Select the <form> tags directly by their new IDs ***
 const loginForm = document.getElementById("login-form");
 const signupForm = document.getElementById("signup-form");
 
@@ -40,6 +38,7 @@ showLoginButton.addEventListener("click", (e) => {
 // --- Sign Up Logic ---
 signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+  errorMessageElement.textContent = "";
 
   const name = document.getElementById("signup-name").value;
   const email = document.getElementById("signup-email").value;
@@ -73,6 +72,7 @@ signupForm.addEventListener("submit", async (e) => {
 // --- Login Logic ---
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+  errorMessageElement.textContent = "";
 
   const email = document.getElementById("login-email").value;
   const password = document.getElementById("login-password").value;
@@ -88,9 +88,18 @@ loginForm.addEventListener("submit", async (e) => {
     const userDocRef = doc(db, "users", user.uid);
     const userDocSnap = await getDoc(userDocRef);
 
-    if (userDocSnap.exists() && userDocSnap.data().role === "admin") {
-      window.location.href = "admin.html";
+    if (userDocSnap.exists()) {
+      const userData = userDocSnap.data();
+      if (userData.role === "admin") {
+        window.location.href = "admin.html";
+      } else if (userData.role === "staff") {
+        window.location.href = "staff.html";
+      } else {
+        // Default to customer view
+        window.location.href = "booking.html";
+      }
     } else {
+      // If user exists in Auth but not Firestore, treat as a customer.
       window.location.href = "booking.html";
     }
   } catch (error) {
